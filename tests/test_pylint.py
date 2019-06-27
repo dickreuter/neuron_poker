@@ -38,6 +38,7 @@ IGNORE_LIST = ["""\r\n""",  # part of final output
                "------------",  # part of final output
                "Your code has been rated at", "E           ",  # part of final output
                "Redefining built-in 'id'",  # exception as it seems never a problem
+               "UPPER_CASE naming style (invalid-name)",
                """"log" doesn't conform to UPPER_CASE"""]
 
 REPOSITORIES = list(set(FOLDERS) - set(EXCLUDE_SUBFOLDERS))

@@ -2,7 +2,10 @@ import time
 
 import numpy as np
 
+from tools.hand_evaluator import CARD_RANKS_ORIGINAL, SUITS_ORIGINAL
+
 strided = np.lib.stride_tricks.as_strided
+
 
 # pylint: skip-file
 
@@ -274,8 +277,8 @@ class Evaluation(object):
         HighCardVals = np.array([HighCard1Val, HighCard2Val, HighCard3Val, HighCard4Val, HighCard5Val])
 
         self.highcard = np.all(np.stack((
-                                        self.pair_amount == 0, self.threeofakind == False, self.fourofakind_amount == 0,
-                                        self.straight == False, self.flush == False), axis=0), axis=0)
+            self.pair_amount == 0, self.threeofakind == False, self.fourofakind_amount == 0,
+            self.straight == False, self.flush == False), axis=0), axis=0)
 
         cards13to1 = np.arange(13, 0, -1) * -1
         HighCards = np.sort((self.counts == 1) * cards13to1 * -1, axis=2)[:, :, ::-1][:, :, :5]
@@ -296,8 +299,8 @@ class Evaluation(object):
         self.detected_types = np.stack((self.highcard, self.pair, self.twopair, self.threeofakind, self.straight,
                                         self.flush, self.fullhouse, self.fourofakind, self.straightflush), axis=0)
         self.hand_vals = np.stack((
-        self.highCardsVal, self.pairScore, self.twoPairScore, self.threeScore, self.straightScore, self.flushScore,
-        self.fullhouseScore, self.fourofakindScore, self.straightflush_score), axis=0)
+            self.highCardsVal, self.pairScore, self.twoPairScore, self.threeScore, self.straightScore, self.flushScore,
+            self.fullhouseScore, self.fourofakindScore, self.straightflush_score), axis=0)
 
         detected_types = self.detected_types * 1
         self.active_multiplier = self.cardtype_multiplier[:, None, None] * detected_types * self.hand_vals
@@ -321,7 +324,22 @@ class Evaluation(object):
 
 
 E = Evaluation()
-winPercent = E.run_evaluation(card1=[2, 0], card2=[2, 1], tablecards=[[5, 3], [3, 2]], iterations=10000,
+winPercent = E.run_evaluation(card1=[9, 0], card2=[2, 1], tablecards=[[5, 3], [3, 2]], iterations=10000,
                               player_amount=3)
 
 print(winPercent)
+
+
+def numpy_montecarlo(my_cards, table_cards_alpha_numeric, iterations, player_amount):
+    """Translate alpha numerica cards to numeric and run montecarlo"""
+    card1 = [CARD_RANKS_ORIGINAL.find(my_cards[0][0][0]), SUITS_ORIGINAL.find(my_cards[0][0][1])]
+    card2 = [CARD_RANKS_ORIGINAL.find(my_cards[0][1][0]), SUITS_ORIGINAL.find(my_cards[0][1][1])]
+
+    table_cards_numeric = []
+    for table_card in table_cards_alpha_numeric:
+        table_cards_numeric.append([CARD_RANKS_ORIGINAL.find(table_card[0]), SUITS_ORIGINAL.find(table_card[1])])
+
+    equity = E.run_evaluation(card1=card1, card2=card2, tablecards=table_cards_numeric, iterations=iterations,
+                              player_amount=player_amount)
+
+    return equity * 100

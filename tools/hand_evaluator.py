@@ -1,7 +1,10 @@
 """Texas holdem hand evaluation."""
 
-
 # pylint: disable=too-many-statements, too-many-branches, too-many-locals
+
+CARD_RANKS_ORIGINAL = '23456789TJQKA'
+SUITS_ORIGINAL = 'CDHS'
+
 
 def get_winner(player_hands, table_cards):
     """Determine the winning hands of multiple players"""
@@ -23,9 +26,7 @@ def eval_best_hand(hands):  # evaluate which hand is best
 
 def _calc_score(hand):
     """Assign a calc_score to the hand so it can be compared with other hands"""
-    card_ranks_original = '23456789TJQKA'
-    original_suits = 'CDHS'
-    rcounts = {card_ranks_original.find(r): ''.join(hand).count(r) for r, _ in hand}.items()
+    rcounts = {CARD_RANKS_ORIGINAL.find(r): ''.join(hand).count(r) for r, _ in hand}.items()
     score, card_ranks = zip(*sorted((cnt, rank) for rank, cnt in rcounts)[::-1])
 
     potential_threeofakind = score[0] == 3
@@ -60,12 +61,12 @@ def _calc_score(hand):
         suits = [s for _, s in hand]
         flush = max(suits.count(s) for s in suits) >= 5
         if flush:
-            for flush_suit in original_suits:  # get the suit of the flush
+            for flush_suit in SUITS_ORIGINAL:  # get the suit of the flush
                 if suits.count(flush_suit) >= 5:
                     break
 
             flush_hand = [k for k in hand if flush_suit in k]  # pylint: disable=undefined-loop-variable
-            rcounts_flush = {card_ranks_original.find(r): ''.join(flush_hand).count(r) for r, _ in flush_hand}.items()
+            rcounts_flush = {CARD_RANKS_ORIGINAL.find(r): ''.join(flush_hand).count(r) for r, _ in flush_hand}.items()
             score, card_ranks = zip(*sorted((cnt, rank) for rank, cnt in rcounts_flush)[::-1])
             card_ranks = tuple(
                 sorted(card_ranks, reverse=True))  # ignore original sorting where pairs had influence

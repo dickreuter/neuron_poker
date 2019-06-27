@@ -108,7 +108,7 @@ class MonteCarlo(object):
         take_top = int(counts * opponent_ranges)
         allowed = set(list(peflop_equity_list)[-take_top:])
         allowed_cards = [i[0] for i in allowed]
-        # logger.debug("Allowed range: "+str(allowed_cards))
+        # log.debug("Allowed range: "+str(allowed_cards))
         return set(allowed_cards)
 
     def create_card_deck(self):
@@ -188,14 +188,14 @@ class MonteCarlo(object):
             table_card_list.append(Deck.pop(np.random.random_integers(0, len(Deck) - 1)))
         return table_card_list
 
-    def run_montecarlo(self, logger, original_player_card_list, original_table_card_list, player_amount, ui, maxRuns,
+    def run_montecarlo(self, original_player_card_list, original_table_card_list, player_amount, ui, maxRuns,
                        timeout, ghost_cards, opponent_range=1):
 
         if type(opponent_range) == float or type(opponent_range) == int:
             opponent_allowed_cards = self.get_opponent_allowed_cards_list(opponent_range)
             log.info('Preflop reverse tables for ranges for opponent: NO')
         elif type(opponent_range == set):
-            logger.info('Preflop reverse tables for ranges for opponent: YES')
+            log.info('Preflop reverse tables for ranges for opponent: YES')
             opponent_allowed_cards = opponent_range
 
         winnerCardTypeList = []
@@ -256,9 +256,6 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
     # Prepare for montecarlo simulation to evaluate equity (probability of winning with given cards)
     m = MonteCarlo()
 
-    logger = logging.getLogger('montecarlo')
-    logger.setLevel(logging.DEBUG)
-
     if t.gameStage == "PreFlop":
         t.assumedPlayers = 2
         opponent_range = 1
@@ -270,7 +267,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
                 if t.other_players[i]['status'] == 1:
                     break
             n = t.other_players[i]['utg_position']
-            logger.info("Opponent utg position: " + str(n))
+            log.info("Opponent utg position: " + str(n))
             opponent_range = float(p.selected_strategy['range_utg' + str(n)])
         else:
             opponent_range = float(p.selected_strategy['range_multiple_players'])
@@ -284,7 +281,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
                 if t.other_players[i]['status'] == 1:
                     break
             n = t.other_players[i]['utg_position']
-            logger.info("Opponent utg position: " + str(n))
+            log.info("Opponent utg position: " + str(n))
             opponent_range = float(p.selected_strategy['range_utg' + str(n)])
         else:
             opponent_range = float(p.selected_strategy['range_multiple_players'])
@@ -307,12 +304,12 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
             m.collusion_cards = collusion_cards
             if not collusion_player_dropped_out:
                 t.PlayerCardList_and_others.append(collusion_cards)
-                logger.info("Collusion found, player still in game. " + str(collusion_cards))
+                log.info("Collusion found, player still in game. " + str(collusion_cards))
             elif collusion_player_dropped_out:
-                logger.info("COllusion found, but player dropped out." + str(collusion_cards))
+                log.info("COllusion found, but player dropped out." + str(collusion_cards))
                 ghost_cards = collusion_cards
         else:
-            logger.debug("No collusion found")
+            log.debug("No collusion found")
 
     else:
         m.collusion_cards = ''
@@ -328,22 +325,22 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
                 if t.other_players[abs_pos]['status'] == 1:
                     sheet_name = preflop_state.get_reverse_sheetname(abs_pos, t, h)
                     ranges = preflop_state.get_rangecards_from_sheetname(abs_pos, sheet_name, t, h, p)
-                    # logger.debug("Ranges from reverse table: "+str(ranges))
+                    # log.debug("Ranges from reverse table: "+str(ranges))
 
                     # the last player's range will be relevant
                     if t.isHeadsUp == True:
                         opponent_range = ranges
 
         except Exception as e:
-            logger.error("Opponent reverse table failed: " + str(e))
+            log.error("Opponent reverse table failed: " + str(e))
 
     ui_action_and_signals.signal_status.emit("Running range Monte Carlo: " + str(maxRuns))
-    logger.debug("Running Monte Carlo")
+    log.debug("Running Monte Carlo")
     t.montecarlo_timeout = float(config['montecarlo_timeout'])
     timeout = t.mt_tm + t.montecarlo_timeout
-    logger.debug("Used opponent range for montecarlo: " + str(opponent_range))
-    logger.debug("maxRuns: " + str(maxRuns))
-    logger.debug("Player amount: " + str(t.assumedPlayers))
+    log.debug("Used opponent range for montecarlo: " + str(opponent_range))
+    log.debug("maxRuns: " + str(maxRuns))
+    log.debug("Player amount: " + str(t.assumedPlayers))
 
     # calculate range equity
     if t.gameStage != 'PreFlop' and p.selected_strategy['use_relative_equity']:
@@ -351,28 +348,28 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
             t.player_card_range_list_and_others = t.PlayerCardList_and_others[:]
             t.player_card_range_list_and_others[0] = preflop_state.preflop_bot_ranges
 
-            t.range_equity, _ = m.run_montecarlo(logger, t.player_card_range_list_and_others, t.cardsOnTable,
+            t.range_equity, _ = m.run_montecarlo(t.player_card_range_list_and_others, t.cardsOnTable,
                                                  int(t.assumedPlayers), ui, maxRuns=maxRuns, ghost_cards=ghost_cards,
                                                  timeout=timeout, opponent_range=opponent_range)
             t.range_equity = np.round(t.range_equity, 2)
-            logger.debug("Range montecarlo completed successfully with runs: " + str(m.runs))
-            logger.debug("Range equity (range for bot): " + str(t.range_equity))
+            log.debug("Range montecarlo completed successfully with runs: " + str(m.runs))
+            log.debug("Range equity (range for bot): " + str(t.range_equity))
 
     if preflop_state.preflop_bot_ranges == None and p.selected_strategy[
         'preflop_override'] and t.gameStage != 'PreFlop':
-        logger.error("No preflop range for bot, assuming 50% relative equity")
+        log.error("No preflop range for bot, assuming 50% relative equity")
         t.range_equity = .5
 
     ui_action_and_signals.signal_progressbar_increase.emit(10)
     ui_action_and_signals.signal_status.emit("Running card Monte Carlo: " + str(maxRuns))
 
     # run montecarlo for absolute equity
-    t.abs_equity, _ = m.run_montecarlo(logger, t.PlayerCardList_and_others, t.cardsOnTable, int(t.assumedPlayers), ui,
+    t.abs_equity, _ = m.run_montecarlo(t.PlayerCardList_and_others, t.cardsOnTable, int(t.assumedPlayers), ui,
                                        maxRuns=maxRuns, ghost_cards=ghost_cards, timeout=timeout,
                                        opponent_range=opponent_range)
     ui_action_and_signals.signal_status.emit("Monte Carlo completed successfully")
-    logger.debug("Cards Monte Carlo completed successfully with runs: " + str(m.runs))
-    logger.info("Absolute equity (no ranges for bot) " + str(np.round(t.abs_equity, 2)))
+    log.debug("Cards Monte Carlo completed successfully with runs: " + str(m.runs))
+    log.info("Absolute equity (no ranges for bot) " + str(np.round(t.abs_equity, 2)))
 
     if t.gameStage == "PreFlop":
         crd1, crd2 = m.get_two_short_notation(t.mycards)
@@ -383,7 +380,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
         elif crd1 + 'O' in m.preflop_equities:
             m.equity = m.preflop_equities[crd1 + 'O']
         else:
-            logger.warning("Preflop equity not found in lookup table: " + str(crd1))
+            log.warning("Preflop equity not found in lookup table: " + str(crd1))
         t.abs_equity = m.equity
 
     t.abs_equity = np.round(t.abs_equity, 2)
@@ -394,7 +391,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
 
     if t.gameStage != 'PreFlop' and p.selected_strategy['use_relative_equity']:
         t.relative_equity = np.round(t.abs_equity / t.range_equity / 2, 2)
-        logger.info("Relative equity (equity/range equity/2): " + str(t.relative_equity))
+        log.info("Relative equity (equity/range equity/2): " + str(t.relative_equity))
     else:
         t.range_equity = ''
         t.relative_equity = ''
@@ -403,11 +400,11 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
 
 if __name__ == '__main__':
     Simulation = MonteCarlo()
-    logger = logging.getLogger('Montecarlo main')
-    logger.setLevel(logging.DEBUG)
+    log = logging.getLogger('Montecarlo main')
+    log.setLevel(logging.DEBUG)
     # my_cards = [['2D', 'AD']]
     # cards_on_table = ['3S', 'AH', '8D']
-    my_cards = [['KS', 'KC']]
+    # my_cards = [['KS', 'KC']]
     my_cards = [{'AKO', 'AA'}]
     cards_on_table = ['3D', '9H', 'AS', '7S', 'QH']
     players = 3
@@ -416,7 +413,7 @@ if __name__ == '__main__':
     start_time = time.time()
     timeout = start_time + secs
     ghost_cards = ''
-    Simulation.run_montecarlo(logging, my_cards, cards_on_table, player_amount=players, ui=None, maxRuns=maxruns,
+    Simulation.run_montecarlo(my_cards, cards_on_table, player_amount=players, ui=None, maxRuns=maxruns,
                               ghost_cards=ghost_cards, timeout=timeout, opponent_range=0.25)
     print("--- %s seconds ---" % (time.time() - start_time))
     print("Runs: " + str(Simulation.runs))
