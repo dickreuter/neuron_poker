@@ -1,7 +1,7 @@
 """Tests for the gym environment"""
 
 from gym_env.env import HoldemTable, Action, Stage, PlayerCycle
-from gym_env.random_agent import Player
+from agents.agent_random import Player
 
 
 def _create_env(n_players):

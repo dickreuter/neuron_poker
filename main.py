@@ -3,6 +3,7 @@ neuron poker
 
 Usage:
   main.py random [options]
+  main.py keypress [options]
 
 options:
   -h --help         Show this screen.
@@ -15,8 +16,9 @@ import logging
 
 from docopt import docopt
 
+from agents.agent_keypress import Player as KeyPressAgent
+from agents.agent_random import Player as RandomPlayer
 from gym_env.env import HoldemTable
-from gym_env.random_agent import Player
 from tools.helper import get_config
 from tools.helper import init_logger
 
@@ -38,15 +40,35 @@ def command_line_parser():
     log.info("Initializing program")
 
     if args['random']:
-        random_action(render=args['--render'])
+        random_agents(render=args['--render'])
+
+    if args['keypress']:
+        key_press_agents(render=args['--render'])
 
 
-def random_action(render):
+def random_agents(render):
     """Create an environment with 6 random players"""
     n_players = 6
     env = HoldemTable(n_players)
     for _ in range(n_players):
-        player = Player(500)
+        player = RandomPlayer(500)
+        env.add_player(player)
+    env.reset()
+
+    while True:
+        _, _, done, _ = env.step()
+        if render:
+            env.render()
+        if done:
+            break
+
+
+def key_press_agents(render):
+    """Create an environment with 6 key press agents"""
+    n_players = 6
+    env = HoldemTable(n_players)
+    for _ in range(n_players):
+        player = KeyPressAgent(500)
         env.add_player(player)
     env.reset()
 
