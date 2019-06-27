@@ -1,6 +1,5 @@
 """Groupier functions"""
 import logging
-from collections import Iterable
 from enum import Enum
 
 import matplotlib.pyplot as plt
@@ -8,8 +7,10 @@ import numpy as np
 import pandas as pd
 from gym import Env
 
-from tools.hand_evaluator import get_winner
 from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
+from tools.hand_evaluator import get_winner
+from tools.helper import flatten
+from tools.montecarlo_python import get_equity
 
 __author__ = 'Nicolas Dickreuter'
 log = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ class PlayerData:
     def __init__(self):
         """data"""
         self.position = None
-        self.equity_to_river = None
+        self.equity_to_river_alive = None
         self.equity_to_river_2plr = None
         self.equity_to_river_3plr = None
         self.stack = None
@@ -82,7 +83,7 @@ class Stage(Enum):
 class HoldemTable(Env):
     """Pokergame envirnoment"""
 
-    def __init__(self, num_of_players, small_blind=1, big_blind=2):
+    def __init__(self, num_of_players, initial_stacks=100, small_blind=1, big_blind=2):
         """The table needs to be initialized once at the beginning"""
         self.num_of_players = num_of_players
         self.small_blind = small_blind
@@ -109,6 +110,7 @@ class HoldemTable(Env):
         self.stage_data = None
         self.deck = None
         self.winner_ix = None
+        self.initial_stacks = initial_stacks
 
         # pots
         self.community_pot = 0
@@ -119,7 +121,7 @@ class HoldemTable(Env):
         self.reward = None
         self.info = None
         self.done = False
-        self.funds_history = pd.DataFrame()
+        self.funds_history = None
 
     def reset(self):
         """Reset after game over."""
@@ -127,11 +129,13 @@ class HoldemTable(Env):
         self.reward = None
         self.info = None
         self.done = False
+        self.funds_history = pd.DataFrame()
+        for player in self.players:
+            player.stack = self.initial_stacks
 
         self.dealer_pos = 0
         self.player_cycle = PlayerCycle(self.players, dealer_idx=-1, max_steps_after_raiser=len(self.players))
         self._start_new_hand()
-
         self._get_environment()
 
     def step(self, override_action=None):  # pylint: disable=arguments-differ
@@ -145,7 +149,7 @@ class HoldemTable(Env):
         if override_action:
             action = override_action
         else:
-            action = self.current_player.action(self.action_space, self.observation)
+            action = self.current_player.agent_obj.action(self.action_space, self.observation)
         self._process_decision(action)
 
         self._next_player()
@@ -154,6 +158,7 @@ class HoldemTable(Env):
             self._end_hand()
             self._start_new_hand()
 
+        self.player_cycle.update_alive()
         self._get_environment()
         return self.observation, self.reward, self.done, self.info
 
@@ -181,27 +186,33 @@ class HoldemTable(Env):
             self.current_player = self.players[self.winner_ix]
 
         self.player_data.position = self.current_player.seat
-
-        self.player_data.equity_to_river = 1
-        self.player_data.equity_to_river_2plr = 1
-        self.player_data.equity_to_river_3plr = 1
+        self.current_player.equity_alive = get_equity(self.current_player.cards, self.table_cards,
+                                                      sum(self.player_cycle.alive))
+        self.player_data.equity_to_river_alive = self.current_player.equity_alive
 
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))
         arr2 = np.array(list(flatten(self.community_data.__dict__.values())))
         arr3 = np.array([list(flatten(sd.__dict__.values())) for sd in self.stage_data]).flatten()
 
-        self.observation = np.concatenate([arr1, arr2, arr3]).flatten()
+        array_everything = np.concatenate([arr1, arr2, arr3]).flatten()
+
+        self.observation = {'array_everything': array_everything,
+                            'player_data': self.player_data,
+                            'community_data': self.community_data,
+                            'stage_data': self.stage_data
+                            }
         self._get_legal_moves()
 
-        # Simulation.run_montecarlo(logger, my_cards, cards_on_table, players, 1, maxRuns=maxRuns,
-        #                           timeout=start_time, ghost_cards='', opponent_range=opponent_range)
-
-        self.reward = self.current_player.stack + self.player_data.equity_to_river * self.community_pot
+        self.reward = self.current_player.stack + self.player_data.equity_to_river_alive * self.community_pot
 
     def _process_decision(self, action):  # pylint: disable=too-many-statements
         """Process the decisions that have been made by and agent."""
+        if action not in [Action.SMALL_BLIND, Action.BIG_BLIND]:
+            assert action in set(self.action_space), "Illegal decision"
+
         if action == Action.FOLD:
             self.player_cycle.deactivate_current()
+            self.player_cycle.mark_folder()
             log.info(f"Seat {self.current_player.seat}: {action} - Remaining stack: {self.current_player.stack}, "
                      f"Round pot: {self.current_round_pot}, Community pot: {self.community_pot}, "
                      f"player pot: {self.player_pots[self.current_player.seat]}")
@@ -212,53 +223,50 @@ class HoldemTable(Env):
                                self.current_player.stack)
             self.callers.append(self.current_player.seat)
             self.last_caller = self.current_player.seat
-            if self.player_pots[self.current_player.seat]:
-                self.player_cycle.mark_out_of_cash_but_contributed()
 
         # verify the player has enough in his stack
         elif action == Action.CHECK:
             contribution = 0
+            self.player_cycle.mark_checker()
 
         elif action == Action.RAISE_HAlF_POT:
             contribution = (self.community_pot + self.current_round_pot) / 2
             self.raisers.append(self.current_player.seat)
-            self.last_raiser = self.current_player.seat
-            self.player_cycle.mark_raiser()
 
         elif action == Action.RAISE_POT:
             contribution = (self.community_pot + self.current_round_pot)
             self.raisers.append(self.current_player.seat)
-            self.last_raiser = self.current_player.seat
-            self.player_cycle.mark_raiser()
 
         elif action == Action.RAISE_2POT:
             contribution = (self.community_pot + self.current_round_pot) * 2
             self.raisers.append(self.current_player.seat)
-            self.last_raiser = self.current_player.seat
-            self.player_cycle.mark_raiser()
 
         elif action == Action.ALL_IN:
             contribution = self.current_player.stack
             self.raisers.append(self.current_player.seat)
-            if contribution > self.min_call:
-                self.last_raiser = self.current_player.seat
-            self.player_cycle.mark_raiser()
-            self.player_cycle.mark_out_of_cash_but_contributed()
 
         elif action == Action.SMALL_BLIND:
             contribution = np.minimum(self.small_blind, self.current_player.stack)
-            self.player_cycle.mark_raiser()
+            self.last_raiser = self.current_player.seat
 
         elif action == Action.BIG_BLIND:
             contribution = np.minimum(self.big_blind, self.current_player.stack)
-            self.player_cycle.mark_raiser()
+            self.last_raiser = self.current_player.seat
+            self.player_cycle.mark_bb()
         else:
             raise RuntimeError("Illegal action.")
+
+        if contribution > self.min_call:
+            self.player_cycle.mark_raiser()
+            self.last_raiser = self.current_player.seat
 
         self.current_player.stack -= contribution
         self.player_pots[self.current_player.seat] += contribution
         self.current_round_pot += contribution
         self.last_player_pot = self.player_pots[self.current_player.seat]
+
+        if self.current_player.stack == 0 and contribution > 0:
+            self.player_cycle.mark_out_of_cash_but_contributed()
 
         self.min_call = max(self.min_call, contribution)
 
@@ -342,6 +350,8 @@ class HoldemTable(Env):
         """End of an episode."""
         log.info("Game over.")
         self.done = True
+        player_names = [f"{i} - {player.name}" for i, player in enumerate(self.players)]
+        self.funds_history.columns = player_names
         self.funds_history.reset_index(drop=True).plot()
         log.info(self.funds_history)
         plt.show()
@@ -360,17 +370,16 @@ class HoldemTable(Env):
         if self.stage == Stage.PREFLOP:
             log.info("")
             log.info("===Round: Stage: PREFLOP")
-            self.player_cycle.max_steps_total = len(self.players * 2) + 3
+            self.player_cycle.max_steps_total = len(self.players) * 2 + 2
 
             self._next_player()
             self._process_decision(Action.SMALL_BLIND)
             self._next_player()
             self._process_decision(Action.BIG_BLIND)
             self._next_player()
-            self.player_cycle.last_raiser_step += 2  # check if bb can still raise
 
         elif self.stage in [Stage.FLOP, Stage.TURN, Stage.RIVER]:
-            self.player_cycle.max_steps_total = len(self.players * 2)
+            self.player_cycle.max_steps_total = len(self.players) * 2
 
             self._next_player()
 
@@ -380,9 +389,12 @@ class HoldemTable(Env):
         else:
             raise RuntimeError()
 
-    def add_player(self, player):
+    def add_player(self, agent):
         """Add a player to the table. Has to happen at the very beginning"""
+        player = PlayerShell(stack_size=self.initial_stacks, name=agent.name)
+        player.agent_obj = agent
         player.seat = len(self.players)  # assign next seat number to player
+        player.stack = self.initial_stacks
         self.players.append(player)
         self.player_status = [True] * len(self.players)
         self.player_pots = [0] * len(self.players)
@@ -416,13 +428,15 @@ class HoldemTable(Env):
 
     def _end_hand(self):
         self._clean_up_pots()
-        winner_ix = self._get_winner()
-        self._award_winner(winner_ix)
+        self.winner_ix = self._get_winner()
+        self._award_winner(self.winner_ix)
 
     def _get_winner(self):
         """Determine which player has won the hand"""
-        potential_winners = np.array(self.player_cycle.active) \
-                            + np.array(self.player_cycle.out_of_cash_but_contributed)
+        potential_winners = np.logical_and(np.logical_or(np.array(self.player_cycle.can_still_make_moves_in_this_hand),
+                                                         np.array(self.player_cycle.out_of_cash_but_contributed)),
+                                           np.logical_not(np.array(self.player_cycle.folder)))
+
         potential_winner_idx = [i for i, potential_winner in enumerate(potential_winners) if potential_winner]
         if sum(potential_winners) == 1:
             winner_ix = [i for i, active in enumerate(potential_winners) if active][0]
@@ -458,8 +472,7 @@ class HoldemTable(Env):
         """Move to the next player"""
         self.current_player = self.player_cycle.next_player()
         if not self.current_player:
-            if sum(np.array(self.player_cycle.active) \
-                   + np.array(self.player_cycle.out_of_cash_but_contributed)) < 2:
+            if sum(self.player_cycle.alive) < 2:
                 log.info("Only one player remaining in round")
                 self.stage = Stage.END_HIDDEN
 
@@ -545,7 +558,7 @@ class HoldemTable(Env):
             radian = (degrees * (np.pi / 180))
             x = (face_radius + table_radius) * np.cos(radian) + screen_width / 2
             y = (face_radius + table_radius) * np.sin(radian) + screen_height / 2
-            if self.player_cycle.active[i] or self.player_cycle.out_of_cash_but_contributed[i]:
+            if self.player_cycle.alive[i]:
                 color = GREEN
             else:
                 color = RED
@@ -553,26 +566,31 @@ class HoldemTable(Env):
 
             try:
                 if i == self.current_player.seat:
-                    self.viewer.rectangle(x - 10, y, 150, -50, (255, 0, 0, 10))
+                    self.viewer.rectangle(x - 60, y, 150, -50, (255, 0, 0, 10))
             except AttributeError:
                 pass
-
-            self.viewer.text("Player " + str(self.players[i].seat) + ": " + str(self.players[i].cards), x, y,
+            self.viewer.text(f"{self.players[i].name}", x - 60, y - 15,
                              font_size=10,
                              color=WHITE)
-            self.viewer.text("$" + str(self.players[i].stack), x, y + 15, font_size=10, color=WHITE)
+            self.viewer.text(f"Player {self.players[i].seat}: {self.players[i].cards}", x - 60, y,
+                             font_size=10,
+                             color=WHITE)
+            equity_alive = int(round(float(self.players[i].equity_alive) * 100))
+
+            self.viewer.text(f"${self.players[i].stack} (EQ: {equity_alive}%)", x - 60, y + 15, font_size=10,
+                             color=WHITE)
             try:
-                self.viewer.text(self.players[i].last_action_in_stage, x, y + 30, font_size=10, color=WHITE)
+                self.viewer.text(self.players[i].last_action_in_stage, x - 60, y + 30, font_size=10, color=WHITE)
             except IndexError:
                 pass
-            x_inner = (-face_radius + table_radius - 50) * np.cos(radian) + screen_width / 2
-            y_inner = (-face_radius + table_radius - 50) * np.sin(radian) + screen_height / 2
+            x_inner = (-face_radius + table_radius - 60) * np.cos(radian) + screen_width / 2
+            y_inner = (-face_radius + table_radius - 60) * np.sin(radian) + screen_height / 2
             self.viewer.text(str(self.player_pots[i]), x_inner, y_inner, font_size=10, color=WHITE)
-            self.viewer.text(str(self.table_cards), screen_width / 2 - 20, screen_height / 2, font_size=10,
+            self.viewer.text(str(self.table_cards), screen_width / 2 - 40, screen_height / 2, font_size=10,
                              color=WHITE)
-            self.viewer.text("$" + str(self.community_pot), screen_width / 2 - 5, screen_height / 2 + 30, font_size=10,
+            self.viewer.text("$" + str(self.community_pot), screen_width / 2 - 15, screen_height / 2 + 30, font_size=10,
                              color=WHITE)
-            self.viewer.text("$" + str(self.current_round_pot), screen_width / 2 - 5, screen_height / 2 + 50,
+            self.viewer.text("$" + str(self.current_round_pot), screen_width / 2 - 15, screen_height / 2 + 50,
                              font_size=10,
                              color=WHITE)
 
@@ -580,7 +598,7 @@ class HoldemTable(Env):
             y_button = (-face_radius + table_radius - 20) * np.sin(radian) + screen_height / 2
             try:
                 if i == self.player_cycle.dealer_idx:
-                    self.viewer.circle(x_button, y_button, 5, color=RED, thickness=2)
+                    self.viewer.circle(x_button, y_button, 5, color=BLUE, thickness=2)
             except AttributeError:
                 pass
 
@@ -604,15 +622,19 @@ class PlayerCycle:
         self.second_round = False
         self.idx = 0
         self.dealer_idx = dealer_idx
-        self.active = []
+        self.can_still_make_moves_in_this_hand = []  # if the player can still play in this round
+        self.alive = [True] * len(self.lst)  # if the player can still play in the following rounds
         self.out_of_cash_but_contributed = [False] * len(self.lst)
         self.new_hand_reset()
+        self.checkers = 0
+        self.folder = None
 
     def new_hand_reset(self):
         """Reset state if a new hand is dealt"""
         self.idx = self.start_idx
-        self.active = [True] * len(self.lst)
+        self.can_still_make_moves_in_this_hand = [True] * len(self.lst)
         self.out_of_cash_but_contributed = [False] * len(self.lst)
+        self.folder = [False] * len(self.lst)
         self.counter = 0
 
     def new_round_reset(self):
@@ -621,10 +643,11 @@ class PlayerCycle:
         self.second_round = False
         self.idx = self.dealer_idx
         self.last_raiser_step = len(self.lst)
+        self.checkers = 0
 
     def next_player(self, step=1):
         """Switch to the next player in the round."""
-        if sum(np.array(self.active) + np.array(self.out_of_cash_but_contributed)) < 2:
+        if sum(np.array(self.can_still_make_moves_in_this_hand) + np.array(self.out_of_cash_but_contributed)) < 2:
             log.debug("Only one player remaining")
             return False  # only one player remains
 
@@ -633,7 +656,7 @@ class PlayerCycle:
         self.idx %= len(self.lst)
         if self.counter > len(self.lst):
             self.second_round = True
-        if self.max_steps_total and (self.counter > self.max_steps_total):
+        if self.max_steps_total and (self.counter >= self.max_steps_total):
             log.debug("Max steps total has been reached")
             return False
 
@@ -642,17 +665,22 @@ class PlayerCycle:
             log.debug("max steps after raiser has been reached")
             return False
 
+        if self.checkers == sum(self.alive):
+            log.debug("All players checked")
+            return False
+
         while True:
-            if self.active[self.idx]:
+            if self.can_still_make_moves_in_this_hand[self.idx]:
                 break
             else:
                 self.idx += 1
                 self.counter += 1
                 self.idx %= len(self.lst)
-                if self.max_steps_total and self.counter > self.max_steps_total:
+                if self.max_steps_total and self.counter >= self.max_steps_total:
                     log.debug("Max steps total has been reached after jumping some folders")
                     return False
 
+        self.update_alive()
         return self.lst[self.idx]
 
     def next_dealer(self):
@@ -661,7 +689,7 @@ class PlayerCycle:
         self.dealer_idx %= len(self.lst)
 
         while True:
-            if self.active[self.dealer_idx]:
+            if self.can_still_make_moves_in_this_hand[self.dealer_idx]:
                 break
             else:
                 self.dealer_idx += 1
@@ -675,33 +703,55 @@ class PlayerCycle:
 
     def deactivate_player(self, idx):
         """Deactivate a pleyr if he has folded or is out of cash."""
-        assert self.active[idx], "Already deactivated"
-        self.active[idx] = False
+        assert self.can_still_make_moves_in_this_hand[idx], "Already deactivated"
+        self.can_still_make_moves_in_this_hand[idx] = False
 
     def deactivate_current(self):
         """Deactivate the current player if he has folded or is out of cash."""
-        assert self.active[self.idx], "Already deactivated"
-        self.active[self.idx] = False
+        assert self.can_still_make_moves_in_this_hand[self.idx], "Already deactivated"
+        self.can_still_make_moves_in_this_hand[self.idx] = False
+
+    def mark_folder(self):
+        """Mark a player as no longer eligible to win cash from the current hand"""
+        self.folder[self.idx] = True
 
     def mark_raiser(self):
         """Mark a raise for the current player."""
         self.last_raiser = self.counter
+
+    def mark_checker(self):
+        """Counter the number of checks in the round"""
+        self.checkers += 1
 
     def mark_out_of_cash_but_contributed(self):
         """Mark current player as a raiser or caller, but is out of cash."""
         self.out_of_cash_but_contributed[self.idx] = True
         self.deactivate_current()
 
+    def mark_bb(self):
+        """Ensure bb can raise"""
+        self.last_raiser_step = self.counter + len(self.lst)
+
     def is_raising_allowed(self):
         """Check if raising is still allowed at this position"""
-        return self.counter < self.last_raiser_step
+        return self.counter <= self.last_raiser_step
+
+    def update_alive(self):
+        """Update the alive property"""
+        self.alive = np.array(self.can_still_make_moves_in_this_hand) + \
+                     np.array(self.out_of_cash_but_contributed)
 
 
-def flatten(items):
-    """Yield items from any nested iterable; see Reference."""
-    for x in items:
-        if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
-            for sub_x in flatten(x):
-                yield sub_x
-        else:
-            yield x
+class PlayerShell:
+    """Player shell"""
+
+    def __init__(self, stack_size, name):
+        """Initiaization of an agent"""
+        self.stack = stack_size
+        self.seat = None
+        self.equity_alive = 0
+        self.actions = []
+        self.last_action_in_stage = ''
+        self.temp_stack = []
+        self.name = name
+        self.agent_obj = None

@@ -193,9 +193,9 @@ class MonteCarlo(object):
 
         if type(opponent_range) == float or type(opponent_range) == int:
             opponent_allowed_cards = self.get_opponent_allowed_cards_list(opponent_range)
-            log.info('Preflop reverse tables for ranges for opponent: NO')
+            log.debug('Preflop reverse tables for ranges for opponent: NO')
         elif type(opponent_range == set):
-            log.info('Preflop reverse tables for ranges for opponent: YES')
+            log.debug('Preflop reverse tables for ranges for opponent: YES')
             opponent_allowed_cards = opponent_range
 
         winnerCardTypeList = []
@@ -233,9 +233,9 @@ class MonteCarlo(object):
             self.equity = np.round(wins / runs, 3)
 
             if passes > 999 and time.time() > timeout:
-                log.warning("Cutting short montecarlo due to timeout")
-                log.warning("Passes: " + str(passes))
-                log.warning("Runs: " + str(runs))
+                log.debug("Cutting short montecarlo due to timeout")
+                log.debug("Passes: " + str(passes))
+                log.debug("Runs: " + str(runs))
                 break
 
                 # if passes >= maxruns: break
@@ -267,7 +267,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
                 if t.other_players[i]['status'] == 1:
                     break
             n = t.other_players[i]['utg_position']
-            log.info("Opponent utg position: " + str(n))
+            log.debug("Opponent utg position: " + str(n))
             opponent_range = float(p.selected_strategy['range_utg' + str(n)])
         else:
             opponent_range = float(p.selected_strategy['range_multiple_players'])
@@ -281,7 +281,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
                 if t.other_players[i]['status'] == 1:
                     break
             n = t.other_players[i]['utg_position']
-            log.info("Opponent utg position: " + str(n))
+            log.debug("Opponent utg position: " + str(n))
             opponent_range = float(p.selected_strategy['range_utg' + str(n)])
         else:
             opponent_range = float(p.selected_strategy['range_multiple_players'])
@@ -304,9 +304,9 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
             m.collusion_cards = collusion_cards
             if not collusion_player_dropped_out:
                 t.PlayerCardList_and_others.append(collusion_cards)
-                log.info("Collusion found, player still in game. " + str(collusion_cards))
+                log.debug("Collusion found, player still in game. " + str(collusion_cards))
             elif collusion_player_dropped_out:
-                log.info("COllusion found, but player dropped out." + str(collusion_cards))
+                log.debug("COllusion found, but player dropped out." + str(collusion_cards))
                 ghost_cards = collusion_cards
         else:
             log.debug("No collusion found")
@@ -369,7 +369,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
                                        opponent_range=opponent_range)
     ui_action_and_signals.signal_status.emit("Monte Carlo completed successfully")
     log.debug("Cards Monte Carlo completed successfully with runs: " + str(m.runs))
-    log.info("Absolute equity (no ranges for bot) " + str(np.round(t.abs_equity, 2)))
+    log.debug("Absolute equity (no ranges for bot) " + str(np.round(t.abs_equity, 2)))
 
     if t.gameStage == "PreFlop":
         crd1, crd2 = m.get_two_short_notation(t.mycards)
@@ -396,6 +396,14 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
         t.range_equity = ''
         t.relative_equity = ''
     return m
+
+
+def get_equity(player_cards, table_cards, players):
+    """Get equity from a monteacrlo run"""
+    simulation = MonteCarlo()
+    simulation.run_montecarlo([player_cards], table_cards, players, 1, maxRuns=1000,
+                              timeout=time.time() + 1, ghost_cards='', opponent_range=1)
+    return simulation.equity
 
 
 if __name__ == '__main__':

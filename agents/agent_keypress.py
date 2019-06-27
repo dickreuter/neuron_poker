@@ -6,9 +6,9 @@ from gym_env.env import Action
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, stack_size, name=None):
+    def __init__(self, name='Keypress'):
         """Initiaization of an agent"""
-        self.stack = stack_size
+        self.equity_alive = 0
         self.actions = []
         self.last_action_in_stage = ''
         self.temp_stack = []
@@ -23,6 +23,8 @@ class Player:
             try:
                 getch = input()
                 action = Action(int(getch))
+                if action not in action_space:
+                    action = None
             except:  # pylint: disable=bare-except
                 print("Choice not available.")
         return action

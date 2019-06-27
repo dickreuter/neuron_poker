@@ -13,7 +13,8 @@ Run:
 -  Install Anaconda, I would also recommend to install pycharm.
 - ``pip install -r requirements.txt``
 -  Run 6 random players playing against each other:
-   ``main.py random --render``
+   ``main.py random --render`` or
+-  To manually control the players:``main.py keypress --render``
 
 .. figure:: doc/table.png
    :alt: 
@@ -186,7 +187,7 @@ just right click on the tests folder and run it)
 Current league table
 --------------------
 
-*  Random player
+#)  Random player
 
 .. |image0| image:: doc/pots.png
 .. |image1| image:: doc/pytest.png

@@ -323,20 +323,21 @@ class Evaluation(object):
         return MyWins / self.iterations
 
 
-E = Evaluation()
-winPercent = E.run_evaluation(card1=[9, 0], card2=[2, 1], tablecards=[[5, 3], [3, 2]], iterations=10000,
-                              player_amount=3)
+#
+# winPercent = E.run_evaluation(card1=[9, 0], card2=[2, 1], tablecards=[[5, 3], [3, 2]], iterations=10000,
+#                               player_amount=3)
 
-print(winPercent)
+# print(winPercent)
 
 
 def numpy_montecarlo(my_cards, table_cards_alpha_numeric, iterations, player_amount):
     """Translate alpha numerica cards to numeric and run montecarlo"""
+    E = Evaluation()
     card1 = [CARD_RANKS_ORIGINAL.find(my_cards[0][0][0]), SUITS_ORIGINAL.find(my_cards[0][0][1])]
     card2 = [CARD_RANKS_ORIGINAL.find(my_cards[0][1][0]), SUITS_ORIGINAL.find(my_cards[0][1][1])]
 
     table_cards_numeric = []
-    for table_card in table_cards_alpha_numeric:
+    for table_card in table_cards_alpha_numeric[2:]:
         table_cards_numeric.append([CARD_RANKS_ORIGINAL.find(table_card[0]), SUITS_ORIGINAL.find(table_card[1])])
 
     equity = E.run_evaluation(card1=card1, card2=card2, tablecards=table_cards_numeric, iterations=iterations,

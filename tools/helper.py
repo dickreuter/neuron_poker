@@ -8,6 +8,7 @@ import os
 import pickle
 import sys
 import traceback
+from collections import Iterable
 from configparser import ConfigParser, ExtendedInterpolation
 from logging import handlers
 
@@ -175,13 +176,14 @@ def exception_hook(*exc_info):
     log.error("Unhandled exception: %s", text)
 
 
-def flatten_list(lst):
-    """Flatten a list."""
-    flat_list = []
-    for sublist in lst:
-        for item in sublist:
-            flat_list.append(item)
-    return flat_list
+def flatten(items):
+    """Yield items from any nested iterable; see Reference."""
+    for x in items:
+        if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+            for sub_x in flatten(x):
+                yield sub_x
+        else:
+            yield x
 
 
 def get_multiprocessing_config():

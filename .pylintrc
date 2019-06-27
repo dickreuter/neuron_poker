@@ -142,7 +142,8 @@ disable=print-statement,
         line-too-long,
         logging-format-interpolation,
         logging-fstring-interpolation,
-        logging-not-lazy
+        logging-not-lazy,
+        R0801
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -517,7 +518,7 @@ max-attributes=50
 max-bool-expr=5
 
 # Maximum number of branch for function / method body.
-max-branches=12
+max-branches=30
 
 # Maximum number of locals for function / method body.
 max-locals=30

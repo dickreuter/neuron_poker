@@ -7,9 +7,9 @@ from gym_env.env import Action
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, stack_size, name=None):
+    def __init__(self, name='Random'):
         """Initiaization of an agent"""
-        self.stack = stack_size
+        self.equity_alive = 0
         self.actions = []
         self.last_action_in_stage = ''
         self.temp_stack = []
@@ -18,7 +18,8 @@ class Player:
     def action(self, action_space, observation):  # pylint: disable=no-self-use
         """Mandatory method that calculates the move based on the observation array and the action space."""
         _ = observation  # not using the observation for random decision
-        this_player_action_space = {Action.FOLD, Action.CHECK, Action.CALL, Action.RAISE_POT, Action.RAISE_HAlF_POT}
+        this_player_action_space = {Action.FOLD, Action.CHECK, Action.CALL, Action.RAISE_POT, Action.RAISE_HAlF_POT,
+                                    Action.RAISE_2POT}
         possible_moves = this_player_action_space.intersection(set(action_space))
         action = random.choice(list(possible_moves))
         return action
