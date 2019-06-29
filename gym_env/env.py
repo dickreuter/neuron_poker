@@ -370,7 +370,8 @@ class HoldemTable(Env):
         if self.stage == Stage.PREFLOP:
             log.info("")
             log.info("===Round: Stage: PREFLOP")
-            self.player_cycle.max_steps_total = len(self.players) * 2 + 2
+            # max steps total will be adjusted again at bb
+            self.player_cycle.max_steps_total = len(self.players) * 2 +2
 
             self._next_player()
             self._process_decision(Action.SMALL_BLIND)
@@ -731,6 +732,7 @@ class PlayerCycle:
     def mark_bb(self):
         """Ensure bb can raise"""
         self.last_raiser_step = self.counter + len(self.lst)
+        self.max_steps_total = self.counter + len(self.lst) * 2
 
     def is_raising_allowed(self):
         """Check if raising is still allowed at this position"""
