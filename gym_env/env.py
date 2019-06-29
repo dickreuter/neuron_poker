@@ -371,7 +371,7 @@ class HoldemTable(Env):
             log.info("")
             log.info("===Round: Stage: PREFLOP")
             # max steps total will be adjusted again at bb
-            self.player_cycle.max_steps_total = len(self.players) * 2 +2
+            self.player_cycle.max_steps_total = len(self.players) * 2 + 2
 
             self._next_player()
             self._process_decision(Action.SMALL_BLIND)
@@ -434,9 +434,7 @@ class HoldemTable(Env):
 
     def _get_winner(self):
         """Determine which player has won the hand"""
-        potential_winners = np.logical_and(np.logical_or(np.array(self.player_cycle.can_still_make_moves_in_this_hand),
-                                                         np.array(self.player_cycle.out_of_cash_but_contributed)),
-                                           np.logical_not(np.array(self.player_cycle.folder)))
+        potential_winners = self.player_cycle.get_potential_winners()
 
         potential_winner_idx = [i for i, potential_winner in enumerate(potential_winners) if potential_winner]
         if sum(potential_winners) == 1:
@@ -586,12 +584,12 @@ class HoldemTable(Env):
                 pass
             x_inner = (-face_radius + table_radius - 60) * np.cos(radian) + screen_width / 2
             y_inner = (-face_radius + table_radius - 60) * np.sin(radian) + screen_height / 2
-            self.viewer.text(str(self.player_pots[i]), x_inner, y_inner, font_size=10, color=WHITE)
-            self.viewer.text(str(self.table_cards), screen_width / 2 - 40, screen_height / 2, font_size=10,
+            self.viewer.text(f"${self.player_pots[i]}", x_inner, y_inner, font_size=10, color=WHITE)
+            self.viewer.text(f"{self.table_cards}", screen_width / 2 - 40, screen_height / 2, font_size=10,
                              color=WHITE)
-            self.viewer.text("$" + str(self.community_pot), screen_width / 2 - 15, screen_height / 2 + 30, font_size=10,
+            self.viewer.text(f"${self.community_pot}", screen_width / 2 - 15, screen_height / 2 + 30, font_size=10,
                              color=WHITE)
-            self.viewer.text("$" + str(self.current_round_pot), screen_width / 2 - 15, screen_height / 2 + 50,
+            self.viewer.text(f"${self.current_round_pot}", screen_width / 2 - 15, screen_height / 2 + 50,
                              font_size=10,
                              color=WHITE)
 
@@ -742,6 +740,13 @@ class PlayerCycle:
         """Update the alive property"""
         self.alive = np.array(self.can_still_make_moves_in_this_hand) + \
                      np.array(self.out_of_cash_but_contributed)
+
+    def get_potential_winners(self):
+        """Players eligible to win the pot"""
+        potential_winners = np.logical_and(np.logical_or(np.array(self.can_still_make_moves_in_this_hand),
+                                                         np.array(self.out_of_cash_but_contributed)),
+                                           np.logical_not(np.array(self.folder)))
+        return potential_winners
 
 
 class PlayerShell:

@@ -65,6 +65,10 @@ def test_heads_up_after_flop():
     env.step(Action.CHECK)
     env.step(Action.CHECK)
     assert env.stage == Stage.TURN
+    env.step(Action.RAISE_POT)
+    assert env.stage == Stage.TURN
+    env.step(Action.FOLD)
+    assert env.stage == Stage.PREFLOP
 
 def test_scenario3():
     """Test basic actions with 6 players."""

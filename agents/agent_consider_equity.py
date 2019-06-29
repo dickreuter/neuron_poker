@@ -6,7 +6,7 @@ from gym_env.env import Action
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, name='Random', min_call_equity=0, min_bet_equity=0):
+    def __init__(self, name='Random', min_call_equity=None, min_bet_equity=None):
         """Initiaization of an agent"""
         self.equity_alive = 0
         self.name = name
@@ -18,8 +18,20 @@ class Player:
         """Mandatory method that calculates the move based on the observation array and the action space."""
         equity_alive = observation['player_data'].equity_to_river_alive
 
-        if equity_alive > self.min_bet_equity and Action.RAISE_POT in action_space:
+        incremen1 = .1
+        increment2 = .2
+
+        if equity_alive > self.min_bet_equity + increment2 and Action.ALL_IN in action_space:
+            action = Action.ALL_IN
+
+        elif equity_alive > self.min_bet_equity + incremen1 and Action.RAISE_2POT in action_space:
+            action = Action.RAISE_2POT
+
+        elif equity_alive > self.min_bet_equity and Action.RAISE_POT in action_space:
             action = Action.RAISE_POT
+
+        elif equity_alive > self.min_bet_equity - incremen1 and Action.RAISE_HAlF_POT in action_space:
+            action = Action.RAISE_HAlF_POT
 
         elif equity_alive > self.min_call_equity and Action.CALL in action_space:
             action = Action.CALL

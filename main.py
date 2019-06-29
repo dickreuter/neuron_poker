@@ -5,6 +5,7 @@ Usage:
   main.py random [options]
   main.py keypress [options]
   main.py consider_equity [options]
+  main.py equity_improvement --improvement_rounds=<> [options]
 
 options:
   -h --help         Show this screen.
@@ -17,6 +18,8 @@ options:
 
 import logging
 
+import numpy as np
+import pandas as pd
 from docopt import docopt
 
 from agents.agent_consider_equity import Player as EquityPlayer
@@ -53,7 +56,11 @@ def command_line_parser():
         runner.key_press_agents()
 
     elif args['consider_equity']:
-        runner.consider_equity_vs_random()
+        runner.equity_vs_random()
+
+    elif args['equity_improvement']:
+        improvement_rounds = int(args['--improvement_rounds'])
+        runner.equity_self_improvement(improvement_rounds)
 
     else:
         raise RuntimeError("Agrument not yet implemented")
@@ -61,12 +68,14 @@ def command_line_parser():
 
 class Runner:
     """Orchestration"""
+
     def __init__(self, render, num_episodes):
         """Initialize"""
         self.winner_in_episodes = []
         self.render = render
         self.env = None
         self.num_episodes = num_episodes
+        self.log = logging.getLogger(__name__)
 
     def run_episode(self):
         """Run an episode"""
@@ -99,7 +108,7 @@ class Runner:
 
         self.run_episode()
 
-    def consider_equity_vs_random(self):
+    def equity_vs_random(self):
         """Create 6 players, 4 of them equity based, 2 of them random"""
         self.env = HoldemTable(num_of_players=5, initial_stacks=500)
         self.env.add_player(EquityPlayer(name='equity/50/50', min_call_equity=.5, min_bet_equity=-.5))
@@ -113,7 +122,40 @@ class Runner:
             self.run_episode()
             self.winner_in_episodes.append(self.env.winner_ix)
 
-        print(self.winner_in_episodes)
+        league_table = pd.Series(self.winner_in_episodes).value_counts()
+        best_player = league_table.index[0]
+
+        print(league_table)
+        print(f"Best Player: {best_player}")
+
+    def equity_self_improvement(self, improvement_rounds):
+        """Create 6 players, 4 of them equity based, 2 of them random"""
+        calling = [.1, .2, .3, .4, .5, .6]
+        betting = [.2, .3, .4, .5, .6, .7]
+
+        for improvement_round in range(improvement_rounds):
+            self.env = HoldemTable(num_of_players=5, initial_stacks=100)
+            for i in range(6):
+                self.env.add_player(EquityPlayer(name=f'Equity/{calling[i]}/{betting[i]}',
+                                                 min_call_equity=calling[i],
+                                                 min_bet_equity=betting[i]))
+
+            for _ in range(self.num_episodes):
+                self.run_episode()
+                self.winner_in_episodes.append(self.env.winner_ix)
+
+            league_table = pd.Series(self.winner_in_episodes).value_counts()
+            best_player = int(league_table.index[0])
+            print(league_table)
+            print(f"Best Player: {best_player}")
+
+            # self improve:
+            self.log.info(f"Self improvment round {improvement_round}")
+            for i in range(6):
+                calling[i] = np.mean([calling[i], calling[best_player]])
+                self.log.info(f"New calling for player {i} is {calling[i]}")
+                betting[i] = np.mean([betting[i], betting[best_player]])
+                self.log.info(f"New betting for player {i} is {betting[i]}")
 
 
 if __name__ == '__main__':
