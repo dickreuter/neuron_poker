@@ -184,6 +184,19 @@ the upstream/master. \* Only pull requests where all the tests are
 passing can be approved. Best run pytest as described above (in pycharm
 just right click on the tests folder and run it)
 
+Agents
+------
+
+- [x] Agent based on user interaction (keypress)
+- [x] Random agent
+- [x] Equity based strategy (i.e. call and bet above threshold)
+- [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
+- [ ] Reinforcement learning with experience replay
+- [ ] Deep SARSA [[10]](http://people.inf.elte.hu/lorincz/Files/RL_2006/SuttonBook.pdf)
+- [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
+- [ ] Proximal Policy Optimization Algorithms (PPO) [[11]](https://arxiv.org/abs/1707.06347)
+
+
 Current league table
 --------------------
 
