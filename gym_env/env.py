@@ -82,7 +82,7 @@ class Stage(Enum):
 
 
 class HoldemTable(Env):
-    """Pokergame envirnoment"""
+    """Pokergame environment"""
 
     def __init__(self, num_of_players=6, initial_stacks=100, small_blind=1, big_blind=2, render=False):
         """The table needs to be initialized once at the beginning"""
@@ -227,7 +227,7 @@ class HoldemTable(Env):
             self.render()
 
     def _process_decision(self, action):  # pylint: disable=too-many-statements
-        """Process the decisions that have been made by and agent."""
+        """Process the decisions that have been made by an agent."""
         if action not in [Action.SMALL_BLIND, Action.BIG_BLIND]:
             assert action in set(self.action_space), "Illegal decision"
 

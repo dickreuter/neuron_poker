@@ -48,8 +48,8 @@ def command_line_parser():
     log = logging.getLogger("")
     log.info("Initializing program")
 
-    num_eposodes = 1 if not args['--episodes'] else int(args['--episodes'])
-    runner = Runner(render=args['--render'], num_episodes=num_eposodes)
+    num_episodes = 1 if not args['--episodes'] else int(args['--episodes'])
+    runner = Runner(render=args['--render'], num_episodes=num_episodes)
 
     if args['random']:
         runner.random_agents()
@@ -68,7 +68,7 @@ def command_line_parser():
         runner.deep_q_learning()
 
     else:
-        raise RuntimeError("Agrument not yet implemented")
+        raise RuntimeError("Argument not yet implemented")
 
 
 class Runner:
