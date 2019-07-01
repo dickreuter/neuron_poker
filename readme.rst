@@ -161,7 +161,7 @@ Github
 ^^^^^^
 
 It will be hard for one person alone to beat the world at poker. That's
-why this repo aims to have a collborative environment, where models can
+why this repo aims to have a collaborative environment, where models can
 be added and evaluated.
 
 To contribute do the following:
