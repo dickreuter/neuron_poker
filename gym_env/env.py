@@ -83,7 +83,7 @@ class Stage(Enum):
 class HoldemTable(Env):
     """Pokergame envirnoment"""
 
-    def __init__(self, num_of_players, initial_stacks=100, small_blind=1, big_blind=2):
+    def __init__(self, num_of_players=6, initial_stacks=100, small_blind=1, big_blind=2, add_players_manually=False):
         """The table needs to be initialized once at the beginning"""
         self.num_of_players = num_of_players
         self.small_blind = small_blind
@@ -123,6 +123,13 @@ class HoldemTable(Env):
         self.done = False
         self.funds_history = None
 
+        if not add_players_manually:
+            from agents.agent_random import Player as RandomPlayer
+            for _ in range(num_of_players-1):
+                player = RandomPlayer(500)
+                self.add_player(player)
+            self.add_player(PlayerShell(500))
+
     def reset(self):
         """Reset after game over."""
         self.observation = None
@@ -138,17 +145,15 @@ class HoldemTable(Env):
         self._start_new_hand()
         self._get_environment()
 
-    def step(self, override_action=None):  # pylint: disable=arguments-differ
+    def step(self, action=None):  # pylint: disable=arguments-differ
         """
         Next player makes a move and a new environment is observed.
 
         Args:
-            override_action: Used for testing only. Needs to be of Action type
+            action: Used for testing only. Needs to be of Action type
 
         """
-        if override_action:
-            action = override_action
-        else:
+        if not action:
             action = self.current_player.agent_obj.action(self.action_space, self.observation)
         self._process_decision(action)
 

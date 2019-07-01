@@ -7,4 +7,5 @@ numpy
 matplotlib
 pyglet
 keras
+keras-rl
 docopt

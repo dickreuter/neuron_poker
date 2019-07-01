@@ -6,6 +6,7 @@ Usage:
   main.py keypress [options]
   main.py consider_equity [options]
   main.py equity_improvement --improvement_rounds=<> [options]
+  main.py deep_q_learning [options]
 
 options:
   -h --help         Show this screen.
@@ -18,6 +19,7 @@ options:
 
 import logging
 
+import gym
 import numpy as np
 import pandas as pd
 from docopt import docopt
@@ -61,6 +63,9 @@ def command_line_parser():
     elif args['equity_improvement']:
         improvement_rounds = int(args['--improvement_rounds'])
         runner.equity_self_improvement(improvement_rounds)
+
+    elif args['deep_q_learning']:
+        runner.deep_q_learning()
 
     else:
         raise RuntimeError("Agrument not yet implemented")
@@ -156,6 +161,53 @@ class Runner:
                 self.log.info(f"New calling for player {i} is {calling[i]}")
                 betting[i] = np.mean([betting[i], betting[best_player]])
                 self.log.info(f"New betting for player {i} is {betting[i]}")
+
+    def deep_q_learning(self):
+        ENV_NAME = 'neuron_poker-v0'
+        env = gym.make(ENV_NAME)
+
+        np.random.seed(123)
+        env.seed(123)
+        nb_actions = env.action_space.n
+
+        # Next, we build a very simple model.
+        from keras import Sequential
+        from keras.optimizers import Adam
+        from keras.layers import Flatten, Activation, Dense
+        from rl.memory import SequentialMemory
+        from rl.agents import DQNAgent
+        from rl.policy import BoltzmannQPolicy
+
+        model = Sequential()
+        model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+        model.add(Dense(16))
+        model.add(Activation('relu'))
+        model.add(Dense(16))
+        model.add(Activation('relu'))
+        model.add(Dense(16))
+        model.add(Activation('relu'))
+        model.add(Dense(nb_actions))
+        model.add(Activation('linear'))
+        print(model.summary())
+
+        # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
+        # even the metrics!
+        memory = SequentialMemory(limit=50000, window_length=1)
+        policy = BoltzmannQPolicy()
+        dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
+                       target_model_update=1e-2, policy=policy)
+        dqn.compile(Adam(lr=1e-3), metrics=['mae'])
+
+        # Okay, now it's time to learn something! We visualize the training here for show, but this
+        # slows down training quite a lot. You can always safely abort the training prematurely using
+        # Ctrl + C.
+        dqn.fit(env, nb_steps=50000, visualize=True, verbose=2)
+
+        # After training is done, we save the final weights.
+        dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+
+        # Finally, evaluate our algorithm for 5 episodes.
+        dqn.test(env, nb_episodes=5, visualize=True)
 
 
 if __name__ == '__main__':
