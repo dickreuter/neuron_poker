@@ -21,7 +21,7 @@ class Player:
     def action(self, action_space, observation):  # pylint: disable=no-self-use
         """Mandatory method that calculates the move based on the observation array and the action space."""
         _ = observation  # not using the observation for random decision
-        this_player_action_space = {Action.FOLD, Action.CHECK, Action.CALL, Action.RAISE_POT, Action.RAISE_HAlF_POT,
+        this_player_action_space = {Action.FOLD, Action.CHECK, Action.CALL, Action.RAISE_POT, Action.RAISE_HALF_POT,
                                     Action.RAISE_2POT}
         possible_moves = this_player_action_space.intersection(set(action_space))
         action = random.choice(list(possible_moves))

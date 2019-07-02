@@ -62,12 +62,12 @@ class Action(Enum):
     CHECK = 1
     CALL = 2
     RAISE_3BB = 3
-    RAISE_HAlF_POT = 4
-    RAISE_POT = 5
-    RAISE_2POT = 6
-    ALL_IN = 7
-    SMALL_BLIND = 8
-    BIG_BLIND = 9
+    RAISE_HALF_POT = 3
+    RAISE_POT = 4
+    RAISE_2POT = 5
+    ALL_IN = 6
+    SMALL_BLIND = 7
+    BIG_BLIND = 8
 
 
 class Stage(Enum):
@@ -254,7 +254,7 @@ class HoldemTable(Env):
             contribution = (self.community_pot + self.big_blind) * 3
             self.raisers.append(self.current_player.seat)
 
-        elif action == Action.RAISE_HAlF_POT:
+        elif action == Action.RAISE_HALF_POT:
             contribution = (self.community_pot + self.current_round_pot) / 2
             self.raisers.append(self.current_player.seat)
 
@@ -304,7 +304,7 @@ class HoldemTable(Env):
         pos = self.player_cycle.idx
         rnd = self.stage.value + self.second_round
         self.stage_data[rnd].calls[pos] = action == Action.CALL
-        self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HAlF_POT, Action.RAISE_POT]
+        self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT]
         self.stage_data[rnd].min_call_at_action[pos] = self.min_call
         self.stage_data[rnd].community_pot_at_action[pos] = self.community_pot
         self.stage_data[rnd].contribution[pos] = contribution
@@ -525,7 +525,7 @@ class HoldemTable(Env):
                 self.action_space.append(Action.RAISE_3BB)
 
             if self.current_player.stack >= ((self.community_pot + self.current_round_pot) / 2) >= self.min_call:
-                self.action_space.append(Action.RAISE_HAlF_POT)
+                self.action_space.append(Action.RAISE_HALF_POT)
 
             if self.current_player.stack >= (self.community_pot + self.current_round_pot) >= self.min_call:
                 self.action_space.append(Action.RAISE_POT)

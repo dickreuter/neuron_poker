@@ -34,8 +34,8 @@ class Player:
         elif equity_alive > self.min_bet_equity and Action.RAISE_POT in action_space:
             action = Action.RAISE_POT
 
-        elif equity_alive > self.min_bet_equity - incremen1 and Action.RAISE_HAlF_POT in action_space:
-            action = Action.RAISE_HAlF_POT
+        elif equity_alive > self.min_bet_equity - incremen1 and Action.RAISE_HALF_POT in action_space:
+            action = Action.RAISE_HALF_POT
 
         elif equity_alive > self.min_call_equity and Action.CALL in action_space:
             action = Action.CALL
