@@ -153,20 +153,20 @@ def test_call_proper_amount():
     """Test if a player contributes the correct amount if they call behind a caller who could not cover and went all in"""
     env = _create_env(3)
     raise_size = 2 * (env.small_blind + env.big_blind)
-    """Blinds should have been posted"""
-    assert(env.community_data.current_round_pot == env.big_blind + env.small_blind)
 
-    """Button will raise pot size (2*(sb+bb)), sb will call all in with 1 for a total contribution of sb+1, bb should have to bet 2*sb+bb in order to call"""
+    # Blinds should have been posted
+    assert env.community_data.current_round_pot == env.big_blind + env.small_blind
 
+    # Button will raise pot size (2*(sb+bb)), sb will call all in with 1 for a total contribution of sb+1, bb should have to bet 2*sb+bb in order to call
     env.players[0].stack = raise_size
     env.players[1].stack = 1
     env.players[2].stack = raise_size - env.big_blind
 
     env.step(Action.ALL_IN)  # button raise
-    assert(env.min_call == raise_size)
+    assert env.min_call == raise_size
     env.step(Action.CALL)   # sb calls but does not cover
-    assert(env.min_call == raise_size)
+    assert env.min_call == raise_size
     env.step(Action.CALL)   # bb calls full amount
-    assert(env.stage_data[0].contribution[0] == raise_size)
-    assert(env.stage_data[0].contribution[1] == env.small_blind + 1)
-    assert(env.stage_data[0].contribution[2] == raise_size)
+    assert env.stage_data[0].contribution[0] == raise_size
+    assert env.stage_data[0].contribution[1] == env.small_blind + 1
+    assert env.stage_data[0].contribution[2] == raise_size
