@@ -307,7 +307,7 @@ class HoldemTable(Env):
         self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT]
         self.stage_data[rnd].min_call_at_action[pos] = self.min_call
         self.stage_data[rnd].community_pot_at_action[pos] = self.community_pot
-        self.stage_data[rnd].contribution[pos] = contribution
+        self.stage_data[rnd].contribution[pos] += contribution
         self.stage_data[rnd].stack_at_action[pos] = self.current_player.stack
 
         log.info(f"Seat {self.current_player.seat}: {action} - Remaining stack: {self.current_player.stack}, "
