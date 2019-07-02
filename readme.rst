@@ -125,8 +125,8 @@ information:
             self.community_pot: float: the full pot of this hand
             self.current_round_pot: float: the pot of funds added in this round
             self.active_players = [False] * num_players  # one hot encoded, 0 = dealer
-            self.bb
-            self.sb
+            self.big_blind
+            self.small_blind
 
 
     class StageData:  # as a list, 8 times:
