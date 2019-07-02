@@ -3,6 +3,8 @@ import random
 
 from gym_env.env import Action
 
+autplay = True  # play automatically if played against keras-rl
+
 
 class Player:
     """Mandatory class with the player methods"""
@@ -14,6 +16,7 @@ class Player:
         self.last_action_in_stage = ''
         self.temp_stack = []
         self.name = name
+        self.autoplay = True
 
     def action(self, action_space, observation):  # pylint: disable=no-self-use
         """Mandatory method that calculates the move based on the observation array and the action space."""

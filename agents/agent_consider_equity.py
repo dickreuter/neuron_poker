@@ -2,6 +2,8 @@
 
 from gym_env.env import Action
 
+autoplay = True  # play automatically if played against keras-rl
+
 
 class Player:
     """Mandatory class with the player methods"""
@@ -13,6 +15,8 @@ class Player:
 
         self.min_call_equity = min_call_equity
         self.min_bet_equity = min_bet_equity
+
+        self.autoplay = True
 
     def action(self, action_space, observation):  # pylint: disable=no-self-use
         """Mandatory method that calculates the move based on the observation array and the action space."""

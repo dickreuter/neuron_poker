@@ -15,6 +15,7 @@ Run:
 -  Run 6 random players playing against each other:
    ``main.py random --render`` or
 -  To manually control the players:``main.py keypress --render``
+-  Example of genetic algorighm with self improvement: ``main.py equity_improvement --improvement_rounds=20 --episodes=10``
 
 .. figure:: doc/table.png
    :alt: 
@@ -37,6 +38,7 @@ Please add your model based agents here.
 
 -  ``agent_random.py``: an agent making random decisions
 -  ``agent_keypress.py``: an agent taking decision via keypress
+-  ``agent_consider_equity.py``: an agent considering equity information (note the use of the observation property)
 
 tools
 ^^^^^
@@ -44,8 +46,8 @@ tools
 -  ``hand_evaluator.py``: evaluate the best hand of multiple players
 -  ``helper.py``: helper functions
 -  ``montecarlo_numpy2.py``: fast nymph based montecarlo simulation to
-   calculate equity.
--  ``montecarlo_python.py``: slow python based montecarlo. Supports
+   calculate equity. Not yet working correctly. Some tests are failing.
+-  ``montecarlo_python.py``: relatively slow python based montecarlo for equity calculation. Supports
    preflight ranges for other players.
 
 tests
@@ -55,7 +57,7 @@ tests
 -  ``test_montecarlo.py``: tests for the hands evaluator and python
    based equity calculator.
 -  ``test_montecarlo_numpy.py``: tests for the numpy montecarlo
--  ``test_pylint.py``: pylint and pydoc tests to ensure pep8 standards
+-  ``test_pylint.py``: pylint and pydoc tests to ensure pep8 standards and static code analysis
 
 How to contribute
 ~~~~~~~~~~~~~~~~~
@@ -71,19 +73,16 @@ line, simply add another line in the docstring at the top of main.py.
 
     def random_action(render):
         """Create an environment with 6 random players"""
-        n_players = 6
-        env = HoldemTable(n_players)
-        for _ in range(n_players):
-            player = Player(500)
-            env.add_player(player)
-        env.reset()
+        env_name = 'neuron_poker-v0'
+        stack = 500
+        self.env = gym.make(env_name, num_of_players=6, initial_stacks=stack)
+        for _ in range(num_of_plrs):
+            player = RandomPlayer(500)
+            self.env.add_player(player)
 
-        while True:
-            _, _, done, _ = env.step()
-            if render:
-                env.render()
-            if done:
-                break
+        self.env.reset()
+
+As you can see, as a first step
 
 Adding a new model / agent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -191,7 +190,7 @@ Agents
 - [x] Random agent
 - [x] Equity based strategy (i.e. call and bet above threshold)
 - [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
-- [ ] Reinforcement learning with experience replay
+- [/] Reinforcement learning with experience replay [not yet working correctly]
 - [ ] Deep SARSA [[10]](http://people.inf.elte.hu/lorincz/Files/RL_2006/SuttonBook.pdf)
 - [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
 - [ ] Proximal Policy Optimization Algorithms (PPO) [[11]](https://arxiv.org/abs/1707.06347)

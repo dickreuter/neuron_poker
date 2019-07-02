@@ -1,6 +1,5 @@
 """Tests for the gym environment"""
 
-from agents.agent_random import Player
 from gym_env.env import HoldemTable, Action, Stage, PlayerCycle
 
 
@@ -8,7 +7,7 @@ def _create_env(n_players):
     """Create an environment"""
     env = HoldemTable(n_players)
     for _ in range(n_players):
-        player = Player()
+        player = TestPlayer()
         env.add_player(player)
     env.reset()
     return env
@@ -70,6 +69,7 @@ def test_heads_up_after_flop():
     env.step(Action.FOLD)
     assert env.stage == Stage.PREFLOP
 
+
 def test_scenario3():
     """Test basic actions with 6 players."""
     env = _create_env(6)
@@ -127,3 +127,23 @@ def test_cycle_mechanism2():
     cycle.next_player()
     current = cycle.next_player(step=2)
     assert not current
+
+
+class TestPlayer:
+    """Player shell"""
+
+    def __init__(self, stack_size=100, name='TestPlayer'):
+        """Initiaization of an agent"""
+        self.stack = stack_size
+        self.seat = None
+        self.equity_alive = 0
+        self.actions = []
+        self.last_action_in_stage = ''
+        self.temp_stack = []
+        self.name = name
+        self.agent_obj = None
+
+    @staticmethod
+    def action(action):
+        """Perform action."""
+        return action

@@ -27,7 +27,7 @@ from docopt import docopt
 from agents.agent_consider_equity import Player as EquityPlayer
 from agents.agent_keypress import Player as KeyPressAgent
 from agents.agent_random import Player as RandomPlayer
-from gym_env.env import HoldemTable
+from gym_env.env import PlayerShell
 from tools.helper import get_config
 from tools.helper import init_logger
 
@@ -82,40 +82,36 @@ class Runner:
         self.num_episodes = num_episodes
         self.log = logging.getLogger(__name__)
 
-    def run_episode(self):
-        """Run an episode"""
-        self.env.reset()
-        while True:
-            if self.render:
-                self.env.render()
-            _, _, done, _ = self.env.step()
-
-            if done:
-                break
-
     def random_agents(self):
         """Create an environment with 6 random players"""
+        env_name = 'neuron_poker-v0'
+        stack = 500
         num_of_plrs = 6
-        self.env = HoldemTable(num_of_players=num_of_plrs, initial_stacks=500)
+        self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
         for _ in range(num_of_plrs):
             player = RandomPlayer(500)
             self.env.add_player(player)
 
-        self.run_episode()
+        self.env.reset()
 
     def key_press_agents(self):
         """Create an environment with 6 key press agents"""
+        env_name = 'neuron_poker-v0'
+        stack = 500
         num_of_plrs = 6
-        self.env = HoldemTable(num_of_players=num_of_plrs, initial_stacks=500)
+        self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
         for _ in range(num_of_plrs):
             player = KeyPressAgent(500)
             self.env.add_player(player)
 
-        self.run_episode()
+        self.env.reset()
 
     def equity_vs_random(self):
         """Create 6 players, 4 of them equity based, 2 of them random"""
-        self.env = HoldemTable(num_of_players=5, initial_stacks=500)
+        env_name = 'neuron_poker-v0'
+        stack = 500
+        num_of_plrs = 6
+        self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
         self.env.add_player(EquityPlayer(name='equity/50/50', min_call_equity=.5, min_bet_equity=-.5))
         self.env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=-.8))
         self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
@@ -124,7 +120,7 @@ class Runner:
         self.env.add_player(RandomPlayer())
 
         for _ in range(self.num_episodes):
-            self.run_episode()
+            self.env.reset()
             self.winner_in_episodes.append(self.env.winner_ix)
 
         league_table = pd.Series(self.winner_in_episodes).value_counts()
@@ -139,14 +135,16 @@ class Runner:
         betting = [.2, .3, .4, .5, .6, .7]
 
         for improvement_round in range(improvement_rounds):
-            self.env = HoldemTable(num_of_players=5, initial_stacks=100)
+            env_name = 'neuron_poker-v0'
+            stack = 500
+            self.env = gym.make(env_name, num_of_players=5, initial_stacks=stack, render=self.render)
             for i in range(6):
                 self.env.add_player(EquityPlayer(name=f'Equity/{calling[i]}/{betting[i]}',
                                                  min_call_equity=calling[i],
                                                  min_bet_equity=betting[i]))
 
             for _ in range(self.num_episodes):
-                self.run_episode()
+                self.env.reset()
                 self.winner_in_episodes.append(self.env.winner_ix)
 
             league_table = pd.Series(self.winner_in_episodes).value_counts()
@@ -162,32 +160,41 @@ class Runner:
                 betting[i] = np.mean([betting[i], betting[best_player]])
                 self.log.info(f"New betting for player {i} is {betting[i]}")
 
-    def deep_q_learning(self):
-        ENV_NAME = 'neuron_poker-v0'
-        env = gym.make(ENV_NAME)
+    @staticmethod
+    def deep_q_learning():
+        """Implementation of kreras-rl deep q learing."""
+        env_name = 'neuron_poker-v0'
+        stack = 100
+        env = gym.make(env_name, num_of_players=5, initial_stacks=stack)
 
         np.random.seed(123)
         env.seed(123)
-        nb_actions = env.action_space.n
+
+        env.add_player(EquityPlayer(name='equity/50/50', min_call_equity=.5, min_bet_equity=-.5))
+        env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=-.8))
+        env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
+        env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=-.3))
+        env.add_player(RandomPlayer())
+        env.add_player(PlayerShell(name='keras-rl', stack_size=stack))  # shell is used for callback to keras rl
+
+        env.reset()
+
+        nb_actions = len(env.action_space)
 
         # Next, we build a very simple model.
         from keras import Sequential
         from keras.optimizers import Adam
-        from keras.layers import Flatten, Activation, Dense
+        from keras.layers import Dense, Dropout
         from rl.memory import SequentialMemory
         from rl.agents import DQNAgent
         from rl.policy import BoltzmannQPolicy
 
         model = Sequential()
-        model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
-        model.add(Dense(16))
-        model.add(Activation('relu'))
-        model.add(Dense(16))
-        model.add(Activation('relu'))
-        model.add(Dense(16))
-        model.add(Activation('relu'))
-        model.add(Dense(nb_actions))
-        model.add(Activation('linear'))
+        model.add(Dense(64, activation='relu', input_shape=env.observation_space))
+        model.add(Dropout(0.2))
+        model.add(Dense(64, activation='relu'))
+        model.add(Dropout(0.2))
+        model.add(Dense(nb_actions, activation='linear'))
         print(model.summary())
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
@@ -204,7 +211,7 @@ class Runner:
         dqn.fit(env, nb_steps=50000, visualize=True, verbose=2)
 
         # After training is done, we save the final weights.
-        dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+        dqn.save_weights('dqn_{}_weights.h5f'.format(env_name), overwrite=True)
 
         # Finally, evaluate our algorithm for 5 episodes.
         dqn.test(env, nb_episodes=5, visualize=True)
