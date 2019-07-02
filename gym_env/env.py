@@ -240,7 +240,7 @@ class HoldemTable(Env):
             return
 
         if action == Action.CALL:
-            contribution = min(self.last_player_pot - self.player_pots[self.current_player.seat],
+            contribution = min(self.min_call - self.player_pots[self.current_player.seat],
                                self.current_player.stack)
             self.callers.append(self.current_player.seat)
             self.last_caller = self.current_player.seat
