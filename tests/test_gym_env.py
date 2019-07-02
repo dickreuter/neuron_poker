@@ -78,10 +78,10 @@ def test_scenario3():
     env.step(Action.CALL)  # 5
     env.step(Action.CALL)  # 0 dealer
     assert env.stage == Stage.PREFLOP
-    env.step(Action.RAISE_HAlF_POT)  # sb
+    env.step(Action.RAISE_HALF_POT)  # sb
     assert len(env.action_space) > 2
     assert env.stage == Stage.PREFLOP
-    env.step(Action.RAISE_HAlF_POT)  # bb
+    env.step(Action.RAISE_HALF_POT)  # bb
     assert env.stage == Stage.PREFLOP
     assert len(env.action_space) == 2
     env.step(Action.CALL)  # utg in second round
@@ -92,7 +92,7 @@ def test_scenario3():
     env.step(Action.CALL)  # sb
     assert env.stage == Stage.FLOP
     assert env.current_player.seat == 1
-    env.step(Action.RAISE_HAlF_POT)
+    env.step(Action.RAISE_HALF_POT)
 
 
 def test_cycle_mechanism1():
