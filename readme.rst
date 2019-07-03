@@ -38,15 +38,17 @@ Please add your model based agents here.
 
 -  ``agent_random.py``: an agent making random decisions
 -  ``agent_keypress.py``: an agent taking decision via keypress
--  ``agent_consider_equity.py``: an agent considering equity information (note the use of the observation property)
+-  ``agent_consider_equity.py``: an agent considering equity information
+
+Note that the observation property is a dictionary that contains all the information about the players and table that can be used to make a decision.
 
 tools
 ^^^^^
 
 -  ``hand_evaluator.py``: evaluate the best hand of multiple players
 -  ``helper.py``: helper functions
--  ``montecarlo_numpy2.py``: fast nymph based montecarlo simulation to
-   calculate equity. Not yet working correctly. Some tests are failing.
+-  ``montecarlo_numpy2.py``: fast numpy based montecarlo simulation to
+   calculate equity. Not yet working correctly. Some tests are failing. Feel free to fix them.
 -  ``montecarlo_python.py``: relatively slow python based montecarlo for equity calculation. Supports
    preflight ranges for other players.
 
@@ -82,7 +84,11 @@ line, simply add another line in the docstring at the top of main.py.
 
         self.env.reset()
 
-As you can see, as a first step
+As you can see, as a first step, the environment needs to be created. As a second step, different agents need to be
+added to the table. As a third step the game is kicked off with a reset. Agents with autoplay set to True will automatically
+play, by having the action method called of their class. Alternatively you can use the PlayerShell class
+and the environment will require you call call the step function manually and loop over it. This may be helpful
+when using other packages which are designed to interface with the gym, such as keras-rl.
 
 Adding a new model / agent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -158,30 +164,20 @@ It will be hard for one person alone to beat the world at poker. That's
 why this repo aims to have a collborative environment, where models can
 be added and evaluated.
 
-To contribute do the following: \* Get Pycharm and build the virtual
-python environment. Use can do: ``pip install -r requirements.txt`` \*
-Clone your fork to your local machine. You can do this directly from
-pycharm: VCS --> check out from version control --> git \* Add as remote
-the original repository where you created the fork from and call it
-upstream (your fork will be called origin). This can be done with vcs
---> git --> remotes \* Create a new branch: click on master at the
-bottom right, and then click on 'new branch' \* Make your edits. \*
-Ensure all tests pass. Under file --> settings --> python integrated
-tools switch to pytest (see screenshot). |image1| You can then just
-right click on the tests folder and run all tests. All tests need to
-pass. Make sure to add your own tests by simply naming the funtion
-test\_... \* Commit your changes (CTRL+K} \* Push your changes to your
-origin (your fork) (CTRL+SHIFT+K) \* To bring your branch up to date
-with upstream master, if it has moved on: rebase onto upstream master:
-click on your branch at the bottom right, then click on upstream/master,
-then rebase onto. Then make sure to force-push (ctrl+shift+k), then
-select the dropdown next to push and choose force-push (important: don't
-push and merge a rebased branch with your remote) \* Create a pull
-request on your github.com to merge your branch with the upstream
-master. \* When your pull request is approved, it will be merged into
-the upstream/master. \* Only pull requests where all the tests are
-passing can be approved. Best run pytest as described above (in pycharm
-just right click on the tests folder and run it)
+To contribute do the following:
+
+- Get Pycharm and build the virtual python environment. Use can do: ``pip install -r requirements.txt``
+- Clone your fork to your local machine. You can do this directly from pycharm: VCS --> check out from version control --> git
+- Add as remote the original repository where you created the fork from and call it upstream (the connection to your fork should be called origin). This can be done with vcs --> git --> remotes
+- Create a new branch: click on master at the bottom right, and then click on 'new branch'
+- Make your edits.
+- Ensure all tests pass. Under file --> settings --> python integrated tools switch to pytest (see screenshot). |image1| You can then just right click on the tests folder and run all tests. All tests need to pass. Make sure to add your own tests by simply naming the funtion test\_... \
+- Make sure all the tests are passing. Best run pytest as described above (in pycharm just right click on the tests folder and run it). If a test fails, you can debug the test, by right clicking on it and put breakpoints, or even open a console at the breakpoint: https://stackoverflow.com/questions/19329601/interactive-shell-debugging-with-pycharm
+- Commit your changes (CTRL+K}
+- Push your changes to your origin (your fork) (CTRL+SHIFT+K)
+- To bring your branch up to date with upstream master, if it has moved on: rebase onto upstream master: click on your branch name at the bottom right of pycharm, then click on upstream/master, then rebase onto. You may need to resolve soe conflicts. Once this is done, make sure to always force-push (ctrl+shift+k), (not just push). This can be done by selecting the dropdown next to push and choose force-push (important: don't push and merge a rebased branch with your remote)
+- Create a pull request on your github.com to merge your branch with the upstream master.
+- When your pull request is approved, it will be merged into the upstream/master.
 
 Agents
 ------
@@ -195,10 +191,16 @@ Agents
 - [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
 - [ ] Proximal Policy Optimization Algorithms (PPO) [[11]](https://arxiv.org/abs/1707.06347)
 
+Roadmap
+-------
+- [x] Build an openai gym environment for texas holdem
+- [/] Iron out bugs (your help is required)
+- [ ] Add more agents
 
 Current league table
 --------------------
 
+#)  Equity based player
 #)  Random player
 
 .. |image0| image:: doc/pots.png
