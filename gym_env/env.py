@@ -160,16 +160,18 @@ class HoldemTable(Env):
         """
         self.observation_space = self.array_everything.shape
 
-        if action not in self.legal_moves:
-            log.warning("Illegal move, try again")
-            return self.array_everything, self.illegal_move_reward, self.done, self.info
-
-        if not action:
+        if not action:  # called by env.reset()
             if not hasattr(self.current_player.agent_obj, 'autoplay'):
                 # only player shell, external model required to by calling step method
                 # todo: reward should be for last played action of external model
                 return self.array_everything, self.reward, self.done, self.info
             action = self.current_player.agent_obj.action(self.legal_moves, self.observation)
+
+        # cause retry on illegal move
+        if action not in self.legal_moves:
+            log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
+            return self.array_everything, self.illegal_move_reward, self.done, self.info
+
         self._process_decision(action)
 
         self._next_player()

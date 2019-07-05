@@ -114,7 +114,7 @@ def get_relevant_files():
 # nforce consistent docstrings as per https://www.python.org/dev/peps/pep-0257/.
 
 log = logging.getLogger(__name__)
-REPOSITORIES = ['dealer_engine', 'neuron_poker']
+REPOSITORIES = ['neuron_poker']
 
 # --- please remove files here for enforcement ---
 

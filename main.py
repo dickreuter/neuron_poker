@@ -89,7 +89,7 @@ class Runner:
         num_of_plrs = 6
         self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
         for _ in range(num_of_plrs):
-            player = RandomPlayer(500)
+            player = RandomPlayer()
             self.env.add_player(player)
 
         self.env.reset()
