@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from gym import Env
+from gym.spaces import MultiBinary
 
 from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
 from tools.hand_evaluator import get_winner
@@ -125,6 +126,9 @@ class HoldemTable(Env):
         self.done = False
         self.funds_history = None
         self.array_everything = None
+        self.legal_moves = None
+        self.illegal_move_reward = -1000
+        self.action_space = MultiBinary(len(Action))
 
     def reset(self):
         """Reset after game over."""
@@ -157,12 +161,16 @@ class HoldemTable(Env):
         """
         self.observation_space = self.array_everything.shape
 
-        if not action:
+        while action not in self.legal_moves:  # called by env.reset()
             if not hasattr(self.current_player.agent_obj, 'autoplay'):
                 # only player shell, external model required to by calling step method
                 # todo: reward should be for last played action of external model
                 return self.array_everything, self.reward, self.done, self.info
-            action = self.current_player.agent_obj.action(self.action_space, self.observation)
+            action = self.current_player.agent_obj.action(self.legal_moves, self.observation)
+            if action not in self.legal_moves:
+                log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
+                self.reward = self.illegal_move_reward
+
         self._process_decision(action)
 
         self._next_player()
@@ -229,7 +237,7 @@ class HoldemTable(Env):
     def _process_decision(self, action):  # pylint: disable=too-many-statements
         """Process the decisions that have been made by an agent."""
         if action not in [Action.SMALL_BLIND, Action.BIG_BLIND]:
-            assert action in set(self.action_space), "Illegal decision"
+            assert action in set(self.legal_moves), "Illegal decision"
 
         if action == Action.FOLD:
             self.player_cycle.deactivate_current()
@@ -251,7 +259,7 @@ class HoldemTable(Env):
             self.player_cycle.mark_checker()
 
         elif action == Action.RAISE_3BB:
-            contribution = (self.community_pot + self.big_blind) * 3
+            contribution = self.min_call + 3 * self.big_blind
             self.raisers.append(self.current_player.seat)
 
         elif action == Action.RAISE_HALF_POT:
@@ -513,28 +521,28 @@ class HoldemTable(Env):
 
     def _get_legal_moves(self):
         """Determine what moves are allowed in the current state"""
-        self.action_space = []
+        self.legal_moves = []
         if self.current_round_pot == 0:
-            self.action_space.append(Action.CHECK)
+            self.legal_moves.append(Action.CHECK)
         else:
-            self.action_space.append(Action.CALL)
-            self.action_space.append(Action.FOLD)
+            self.legal_moves.append(Action.CALL)
+            self.legal_moves.append(Action.FOLD)
 
         if self.player_cycle.is_raising_allowed():
-            if self.current_player.stack >= 3 * self.big_blind >= self.min_call:
-                self.action_space.append(Action.RAISE_3BB)
+            if self.current_player.stack >= (self.min_call + 3 * self.big_blind) >= self.min_call:
+                self.legal_moves.append(Action.RAISE_3BB)
 
             if self.current_player.stack >= ((self.community_pot + self.current_round_pot) / 2) >= self.min_call:
-                self.action_space.append(Action.RAISE_HALF_POT)
+                self.legal_moves.append(Action.RAISE_HALF_POT)
 
             if self.current_player.stack >= (self.community_pot + self.current_round_pot) >= self.min_call:
-                self.action_space.append(Action.RAISE_POT)
+                self.legal_moves.append(Action.RAISE_POT)
 
             if self.current_player.stack >= ((self.community_pot + self.current_round_pot) * 2) >= self.min_call:
-                self.action_space.append(Action.RAISE_2POT)
+                self.legal_moves.append(Action.RAISE_2POT)
 
             if self.current_player.stack > 0:
-                self.action_space.append(Action.ALL_IN)
+                self.legal_moves.append(Action.ALL_IN)
 
         log.debug(f"Community+current round pot pot: {self.community_pot + self.current_round_pot}")
 

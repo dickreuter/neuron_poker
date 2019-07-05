@@ -48,7 +48,7 @@ def test_heads_up_after_flop():
     env.step(Action.ALL_IN)
     env.step(Action.ALL_IN)  # 0
     env.step(Action.CALL)  # sb = all in
-    assert Action.ALL_IN in env.action_space  # bb has the option to raise
+    assert Action.ALL_IN in env.legal_moves  # bb has the option to raise
     env.step(Action.FOLD)  # bb folds
     assert sum(env.player_cycle.alive) == 2
     # two players left - heads up
@@ -58,7 +58,7 @@ def test_heads_up_after_flop():
     assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_POT)  # bb raises pot
     assert env.stage == Stage.PREFLOP
-    assert len(env.action_space) == 2
+    assert len(env.legal_moves) == 2
     env.step(Action.CALL)  # sb can now call and then turn
     assert env.stage == Stage.FLOP
     env.step(Action.CHECK)
@@ -79,11 +79,11 @@ def test_scenario3():
     env.step(Action.CALL)  # 0 dealer
     assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_HALF_POT)  # sb
-    assert len(env.action_space) > 2
+    assert len(env.legal_moves) > 2
     assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_HALF_POT)  # bb
     assert env.stage == Stage.PREFLOP
-    assert len(env.action_space) == 2
+    assert len(env.legal_moves) == 2
     env.step(Action.CALL)  # utg in second round
     env.step(Action.CALL)  # 4
     env.step(Action.CALL)  # 5

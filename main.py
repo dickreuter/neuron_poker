@@ -89,7 +89,7 @@ class Runner:
         num_of_plrs = 6
         self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
         for _ in range(num_of_plrs):
-            player = RandomPlayer(500)
+            player = RandomPlayer()
             self.env.add_player(player)
 
         self.env.reset()
@@ -179,7 +179,7 @@ class Runner:
 
         env.reset()
 
-        nb_actions = len(env.action_space)
+        nb_actions = env.action_space.n
 
         # Next, we build a very simple model.
         from keras import Sequential
@@ -190,9 +190,11 @@ class Runner:
         from rl.policy import BoltzmannQPolicy
 
         model = Sequential()
-        model.add(Dense(64, activation='relu', input_shape=env.observation_space))
+        model.add(Dense(512, activation='relu', input_shape=env.observation_space))
         model.add(Dropout(0.2))
-        model.add(Dense(64, activation='relu'))
+        model.add(Dense(512, activation='relu'))
+        model.add(Dropout(0.2))
+        model.add(Dense(512, activation='relu'))
         model.add(Dropout(0.2))
         model.add(Dense(nb_actions, activation='linear'))
         print(model.summary())
@@ -201,8 +203,19 @@ class Runner:
         # even the metrics!
         memory = SequentialMemory(limit=50000, window_length=1)
         policy = BoltzmannQPolicy()
+        from rl.core import Processor
+        class CustomProcessor(Processor):
+            """he agent and the environment"""
+
+            def process_state_batch(self, batch):
+                """
+                Given a state batch, I want to remove the second dimension, because it's
+                useless and prevents me from feeding the tensor into my CNN
+                """
+                return np.squeeze(batch, axis=1)
+
         dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
-                       target_model_update=1e-2, policy=policy)
+                       target_model_update=1e-2, policy=policy, processor=CustomProcessor)
         dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
         # Okay, now it's time to learn something! We visualize the training here for show, but this
