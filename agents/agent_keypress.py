@@ -21,11 +21,9 @@ class Player:
         action = None
         while action is None:
             print(f"Choose action with number: {action_space}")
+            getch = input()
             try:
-                getch = input()
                 action = Action(int(getch))
-                if action not in action_space:
-                    action = None
             except:  # pylint: disable=bare-except
-                print("Choice not available.")
+                pass
         return action

@@ -126,6 +126,7 @@ class HoldemTable(Env):
         self.done = False
         self.funds_history = None
         self.array_everything = None
+        self.legal_moves = None
         self.illegal_move_reward = -1000
         self.action_space = MultiBinary(len(Action))
 
@@ -160,17 +161,15 @@ class HoldemTable(Env):
         """
         self.observation_space = self.array_everything.shape
 
-        if not action:  # called by env.reset()
+        while action not in self.legal_moves:  # called by env.reset()
             if not hasattr(self.current_player.agent_obj, 'autoplay'):
                 # only player shell, external model required to by calling step method
                 # todo: reward should be for last played action of external model
                 return self.array_everything, self.reward, self.done, self.info
             action = self.current_player.agent_obj.action(self.legal_moves, self.observation)
-
-        # cause retry on illegal move
-        if action not in self.legal_moves:
-            log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
-            return self.array_everything, self.illegal_move_reward, self.done, self.info
+            if action not in self.legal_moves:
+                log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
+                self.reward = self.illegal_move_reward
 
         self._process_decision(action)
 
@@ -260,7 +259,7 @@ class HoldemTable(Env):
             self.player_cycle.mark_checker()
 
         elif action == Action.RAISE_3BB:
-            contribution = (self.community_pot + self.big_blind) * 3
+            contribution = self.min_call + 3 * self.big_blind
             self.raisers.append(self.current_player.seat)
 
         elif action == Action.RAISE_HALF_POT:
@@ -530,7 +529,7 @@ class HoldemTable(Env):
             self.legal_moves.append(Action.FOLD)
 
         if self.player_cycle.is_raising_allowed():
-            if self.current_player.stack >= 3 * self.big_blind >= self.min_call:
+            if self.current_player.stack >= (self.min_call + 3 * self.big_blind) >= self.min_call:
                 self.legal_moves.append(Action.RAISE_3BB)
 
             if self.current_player.stack >= ((self.community_pot + self.current_round_pot) / 2) >= self.min_call:
