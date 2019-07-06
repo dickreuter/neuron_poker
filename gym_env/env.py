@@ -29,6 +29,7 @@ class CommunityData:
         self.active_players = [False] * num_players  # one hot encoded, 0 = dealer
         self.big_blind = 0
         self.small_blind = 0
+        self.legal_moves = [0 for action in Action]
 
 
 class StageData:
@@ -219,6 +220,7 @@ class HoldemTable(Env):
         self.community_data.small_blind = self.small_blind
         self.community_data.big_blind = self.big_blind
         self.community_data.stage[np.minimum(self.stage.value, 3)] = 1
+        self.community_data.legal_moves = [action in self.legal_moves for action in Action]
         # self.cummunity_data.active_players
 
         self.player_data = PlayerData()

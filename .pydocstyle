@@ -1,3 +1,4 @@
 [pydocstyle]
-ignore = D401, D403, D400, D203, D212, D406, D407, D213, D404, D411
 match = .*\.py
+# google doccstyle
+select = D203, D204, D213, D215, D401, D404, D406, D407, D408, D409

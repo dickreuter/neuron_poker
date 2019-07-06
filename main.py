@@ -6,7 +6,7 @@ Usage:
   main.py keypress [options]
   main.py consider_equity [options]
   main.py equity_improvement --improvement_rounds=<> [options]
-  main.py deep_q_learning [options]
+  main.py dqn_train [options]
 
 options:
   -h --help         Show this screen.
@@ -19,11 +19,11 @@ options:
 
 import logging
 
-import gym
 import numpy as np
 import pandas as pd
 from docopt import docopt
 
+import gym
 from agents.agent_consider_equity import Player as EquityPlayer
 from agents.agent_keypress import Player as KeyPressAgent
 from agents.agent_random import Player as RandomPlayer
@@ -64,8 +64,8 @@ def command_line_parser():
         improvement_rounds = int(args['--improvement_rounds'])
         runner.equity_self_improvement(improvement_rounds)
 
-    elif args['deep_q_learning']:
-        runner.deep_q_learning()
+    elif args['dqn_train']:
+        runner.dqn_train()
 
     else:
         raise RuntimeError("Argument not yet implemented")
@@ -161,7 +161,7 @@ class Runner:
                 self.log.info(f"New betting for player {i} is {betting[i]}")
 
     @staticmethod
-    def deep_q_learning():
+    def dqn_train():
         """Implementation of kreras-rl deep q learing."""
         env_name = 'neuron_poker-v0'
         stack = 100
@@ -179,61 +179,10 @@ class Runner:
 
         env.reset()
 
-        nb_actions = env.action_space.n
-
-        # Next, we build a very simple model.
-        from keras import Sequential
-        from keras.optimizers import Adam
-        from keras.layers import Dense, Dropout
-        from rl.memory import SequentialMemory
-        from rl.agents import DQNAgent
-        from rl.policy import BoltzmannQPolicy
-
-        model = Sequential()
-        model.add(Dense(512, activation='relu', input_shape=env.observation_space))
-        model.add(Dropout(0.2))
-        model.add(Dense(512, activation='relu'))
-        model.add(Dropout(0.2))
-        model.add(Dense(512, activation='relu'))
-        model.add(Dropout(0.2))
-        model.add(Dense(nb_actions, activation='linear'))
-
-        # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
-        # even the metrics!
-        memory = SequentialMemory(limit=200, window_length=1)
-        policy = BoltzmannQPolicy()
-        from rl.core import Processor
-
-        class CustomProcessor(Processor):
-            """he agent and the environment"""
-
-            def process_state_batch(self, batch):
-                """
-                Given a state batch, I want to remove the second dimension, because it's
-                useless and prevents me from feeding the tensor into my CNN
-                """
-                return np.squeeze(batch, axis=1)
-
-            def process_info(self, info):
-                processed_info = info['player_data']
-                if 'stack' in processed_info:
-                    del processed_info['stack']
-                return processed_info
-
-        dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=100,
-                       target_model_update=1e-2, policy=policy,
-                       processor=CustomProcessor(),
-                       batch_size=10)
-        dqn.compile(Adam(lr=1e-3), metrics=['mae'])
-
-        # initiate training loop
-        dqn.fit(env, nb_max_start_steps=50, nb_steps=1000, visualize=False, verbose=2)
-
-        # After training is done, we save the final weights.
-        dqn.save_weights('dqn_{}_weights.h5f'.format(env_name), overwrite=True)
-
-        # Finally, evaluate our algorithm for 5 episodes.
-        dqn.test(env, nb_episodes=5, visualize=False)
+        from agents.agent_dqn import Player as DQNAgent
+        dqn = DQNAgent()
+        dqn.initiate_agent(env)
+        dqn.train(env_name='dqn1')
 
 
 if __name__ == '__main__':

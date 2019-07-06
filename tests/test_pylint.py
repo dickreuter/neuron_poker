@@ -121,7 +121,7 @@ REPOSITORIES = ['neuron_poker']
 IGNORES = ['__init__.py']
 
 
-def test_pydocstyle():
+def test_pydocsftyle():
     """
     Docstring enforcement test.
 
