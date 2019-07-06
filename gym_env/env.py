@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from gym import Env
-from gym.spaces import MultiBinary
+from gym.spaces import Discrete
 
 from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
 from tools.hand_evaluator import get_winner
@@ -112,6 +112,7 @@ class HoldemTable(Env):
         self.player_data = None
         self.stage_data = None
         self.deck = None
+        self.action = None
         self.winner_ix = None
         self.initial_stacks = initial_stacks
 
@@ -128,7 +129,7 @@ class HoldemTable(Env):
         self.array_everything = None
         self.legal_moves = None
         self.illegal_move_reward = -1000
-        self.action_space = MultiBinary(len(Action))
+        self.action_space = Discrete(len(Action))
 
     def reset(self):
         """Reset after game over."""
@@ -144,14 +145,13 @@ class HoldemTable(Env):
         self.player_cycle = PlayerCycle(self.players, dealer_idx=-1, max_steps_after_raiser=len(self.players))
         self._start_new_hand()
         self._get_environment()
-
         # auto play for agents where autoplay is set
-        if hasattr(self.current_player, 'agent_obj') and not self.done:
-            self.step()
+        if self._agent_is_autoplay() and not self.done:
+            self.step('initial_player_autoplay')  # kick off the first action after bb by an autoplay agent
 
         return self.array_everything
 
-    def step(self, action=None):  # pylint: disable=arguments-differ
+    def step(self, action):  # pylint: disable=arguments-differ
         """
         Next player makes a move and a new environment is observed.
 
@@ -159,18 +159,32 @@ class HoldemTable(Env):
             action: Used for testing only. Needs to be of Action type
 
         """
-        self.observation_space = self.array_everything.shape
+        # loop over step function, calling the agent's action method
+        # until either the env id sone, or an agent is just a shell and
+        # and will get a call from to the step function externally (e.g. via
+        # keras-rl
 
-        while action not in self.legal_moves:  # called by env.reset()
-            if not hasattr(self.current_player.agent_obj, 'autoplay'):
-                # only player shell, external model required to by calling step method
-                # todo: reward should be for last played action of external model
-                return self.array_everything, self.reward, self.done, self.info
-            action = self.current_player.agent_obj.action(self.legal_moves, self.observation)
-            if action not in self.legal_moves:
-                log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
-                self.reward = self.illegal_move_reward
+        if self._agent_is_autoplay():
+            while self._agent_is_autoplay() and not self.done:
+                log.debug("Autoplay agent. Call action method of agent.")
+                self._get_environment()
+                # call agent's action method
+                action = self.current_player.agent_obj.action(self.legal_moves, self.observation, self.info)
+                if Action(action) not in self.legal_moves:
+                    self._illegal_move(action)
+                else:
+                    self._execute_step(Action(action))
 
+        else:  # action received from player shell (e.g. keras rl, not autoplay)
+            self._get_environment()  # get legal moves
+            if Action(action) not in self.legal_moves:
+                self._illegal_move(action)
+            else:
+                self._execute_step(Action(action))
+
+        return self.array_everything, self.reward, self.done, self.info
+
+    def _execute_step(self, action):
         self._process_decision(action)
 
         self._next_player()
@@ -181,12 +195,14 @@ class HoldemTable(Env):
 
         self.player_cycle.update_alive()
         self._get_environment()
+        self._calculate_reward(action)
 
-        # auto play for agents where autoplay is set
-        if hasattr(self.current_player, 'agent_obj') and not self.done:
-            self.step()
+    def _illegal_move(self, action):
+        log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
+        self.reward = self.illegal_move_reward
 
-        return self.observation, self.reward, self.done, self.info
+    def _agent_is_autoplay(self):
+        return hasattr(self.current_player.agent_obj, 'autoplay')
 
     def _get_environment(self):
         """Observe the environment"""
@@ -206,7 +222,7 @@ class HoldemTable(Env):
         # self.cummunity_data.active_players
 
         self.player_data = PlayerData()
-        self.player_data.stack = [player.stack for player in self.players]
+        self.player_data.stack = [player.stack / (self.big_blind * 100) for player in self.players]
 
         if not self.current_player:  # game over
             self.current_player = self.players[self.winner_ix]
@@ -222,17 +238,33 @@ class HoldemTable(Env):
 
         self.array_everything = np.concatenate([arr1, arr2, arr3]).flatten()
 
-        self.observation = {'array_everything': self.array_everything,
-                            'player_data': self.player_data,
-                            'community_data': self.community_data,
-                            'stage_data': self.stage_data
-                            }
+        self.observation = self.array_everything
+
+        self.info = {'array_everything': self.array_everything,
+                     'player_data': self.player_data.__dict__,
+                     'community_data': self.community_data.__dict__,
+                     'stage_data': [stage.__dict__ for stage in self.stage_data]
+                     }
+
         self._get_legal_moves()
 
-        self.reward = self.current_player.stack + self.player_data.equity_to_river_alive * self.community_pot
+        self.observation_space = self.array_everything.shape
 
         if self.render_switch:
             self.render()
+
+    def _calculate_reward(self, last_action):
+        """
+        Preliminiary implementation of reward function
+
+        - Currently missing potential additional winnings fro future contributions
+        """
+        if last_action == Action.FOLD:
+            self.reward = -(
+                self.community_pot + self.current_round_pot)
+        else:
+            self.reward = self.player_data.equity_to_river_alive * (self.community_pot + self.current_round_pot) - \
+                          (1 - self.player_data.equity_to_river_alive) * self.player_pots[self.current_player.seat]
 
     def _process_decision(self, action):  # pylint: disable=too-many-statements
         """Process the decisions that have been made by an agent."""
@@ -242,85 +274,84 @@ class HoldemTable(Env):
         if action == Action.FOLD:
             self.player_cycle.deactivate_current()
             self.player_cycle.mark_folder()
-            log.info(f"Seat {self.current_player.seat}: {action} - Remaining stack: {self.current_player.stack}, "
-                     f"Round pot: {self.current_round_pot}, Community pot: {self.community_pot}, "
-                     f"player pot: {self.player_pots[self.current_player.seat]}")
-            return
 
-        if action == Action.CALL:
-            contribution = min(self.min_call - self.player_pots[self.current_player.seat],
-                               self.current_player.stack)
-            self.callers.append(self.current_player.seat)
-            self.last_caller = self.current_player.seat
-
-        # verify the player has enough in his stack
-        elif action == Action.CHECK:
-            contribution = 0
-            self.player_cycle.mark_checker()
-
-        elif action == Action.RAISE_3BB:
-            contribution = self.min_call + 3 * self.big_blind
-            self.raisers.append(self.current_player.seat)
-
-        elif action == Action.RAISE_HALF_POT:
-            contribution = (self.community_pot + self.current_round_pot) / 2
-            self.raisers.append(self.current_player.seat)
-
-        elif action == Action.RAISE_POT:
-            contribution = (self.community_pot + self.current_round_pot)
-            self.raisers.append(self.current_player.seat)
-
-        elif action == Action.RAISE_2POT:
-            contribution = (self.community_pot + self.current_round_pot) * 2
-            self.raisers.append(self.current_player.seat)
-
-        elif action == Action.ALL_IN:
-            contribution = self.current_player.stack
-            self.raisers.append(self.current_player.seat)
-
-        elif action == Action.SMALL_BLIND:
-            contribution = np.minimum(self.small_blind, self.current_player.stack)
-            self.last_raiser = self.current_player.seat
-
-        elif action == Action.BIG_BLIND:
-            contribution = np.minimum(self.big_blind, self.current_player.stack)
-            self.last_raiser = self.current_player.seat
-            self.player_cycle.mark_bb()
         else:
-            raise RuntimeError("Illegal action.")
 
-        if contribution > self.min_call:
-            self.player_cycle.mark_raiser()
-            self.last_raiser = self.current_player.seat
+            if action == Action.CALL:
+                contribution = min(self.min_call - self.player_pots[self.current_player.seat],
+                                   self.current_player.stack)
+                self.callers.append(self.current_player.seat)
+                self.last_caller = self.current_player.seat
 
-        self.current_player.stack -= contribution
-        self.player_pots[self.current_player.seat] += contribution
-        self.current_round_pot += contribution
-        self.last_player_pot = self.player_pots[self.current_player.seat]
+            # verify the player has enough in his stack
+            elif action == Action.CHECK:
+                contribution = 0
+                self.player_cycle.mark_checker()
 
-        if self.current_player.stack == 0 and contribution > 0:
-            self.player_cycle.mark_out_of_cash_but_contributed()
+            elif action == Action.RAISE_3BB:
+                contribution = self.min_call + 3 * self.big_blind
+                self.raisers.append(self.current_player.seat)
 
-        self.min_call = max(self.min_call, contribution)
+            elif action == Action.RAISE_HALF_POT:
+                contribution = (self.community_pot + self.current_round_pot) / 2
+                self.raisers.append(self.current_player.seat)
 
-        self.current_player.actions.append(action)
-        self.current_player.last_action_in_stage = action.name
-        self.current_player.temp_stack.append(self.current_player.stack)
+            elif action == Action.RAISE_POT:
+                contribution = (self.community_pot + self.current_round_pot)
+                self.raisers.append(self.current_player.seat)
 
-        self.player_max_win[self.current_player.seat] += contribution  # side pot
+            elif action == Action.RAISE_2POT:
+                contribution = (self.community_pot + self.current_round_pot) * 2
+                self.raisers.append(self.current_player.seat)
 
-        pos = self.player_cycle.idx
-        rnd = self.stage.value + self.second_round
-        self.stage_data[rnd].calls[pos] = action == Action.CALL
-        self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT]
-        self.stage_data[rnd].min_call_at_action[pos] = self.min_call
-        self.stage_data[rnd].community_pot_at_action[pos] = self.community_pot
-        self.stage_data[rnd].contribution[pos] += contribution
-        self.stage_data[rnd].stack_at_action[pos] = self.current_player.stack
+            elif action == Action.ALL_IN:
+                contribution = self.current_player.stack
+                self.raisers.append(self.current_player.seat)
 
-        log.info(f"Seat {self.current_player.seat}: {action} - Remaining stack: {self.current_player.stack}, "
-                 f"Round pot: {self.current_round_pot}, Community pot: {self.community_pot}, "
-                 f"player pot: {self.player_pots[self.current_player.seat]}")
+            elif action == Action.SMALL_BLIND:
+                contribution = np.minimum(self.small_blind, self.current_player.stack)
+                self.last_raiser = self.current_player.seat
+
+            elif action == Action.BIG_BLIND:
+                contribution = np.minimum(self.big_blind, self.current_player.stack)
+                self.last_raiser = self.current_player.seat
+                self.player_cycle.mark_bb()
+            else:
+                raise RuntimeError("Illegal action.")
+
+            if contribution > self.min_call:
+                self.player_cycle.mark_raiser()
+                self.last_raiser = self.current_player.seat
+
+            self.current_player.stack -= contribution
+            self.player_pots[self.current_player.seat] += contribution
+            self.current_round_pot += contribution
+            self.last_player_pot = self.player_pots[self.current_player.seat]
+
+            if self.current_player.stack == 0 and contribution > 0:
+                self.player_cycle.mark_out_of_cash_but_contributed()
+
+            self.min_call = max(self.min_call, contribution)
+
+            self.current_player.actions.append(action)
+            self.current_player.last_action_in_stage = action.name
+            self.current_player.temp_stack.append(self.current_player.stack)
+
+            self.player_max_win[self.current_player.seat] += contribution  # side pot
+
+            pos = self.player_cycle.idx
+            rnd = self.stage.value + self.second_round
+            self.stage_data[rnd].calls[pos] = action == Action.CALL
+            self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT]
+            self.stage_data[rnd].min_call_at_action[pos] = self.min_call
+            self.stage_data[rnd].community_pot_at_action[pos] = self.community_pot
+            self.stage_data[rnd].contribution[pos] += contribution
+            self.stage_data[rnd].stack_at_action[pos] = self.current_player.stack
+
+        log.info(
+            f"Seat {self.current_player.seat} ({self.current_player.name}): {action} - Remaining stack: {self.current_player.stack}, "
+            f"Round pot: {self.current_round_pot}, Community pot: {self.community_pot}, "
+            f"player pot: {self.player_pots[self.current_player.seat]}")
 
     def _start_new_hand(self):
         """Deal new cards to players and reset table states."""

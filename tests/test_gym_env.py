@@ -144,8 +144,9 @@ class TestPlayer:
         self.agent_obj = None
 
     @staticmethod
-    def action(action):
+    def action(action, observation, info):
         """Perform action."""
+        _ = (observation, info)
         return action
 
 
