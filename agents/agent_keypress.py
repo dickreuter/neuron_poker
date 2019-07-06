@@ -15,9 +15,9 @@ class Player:
         self.name = name
         self.autoplay = True
 
-    def action(self, action_space, observation):  # pylint: disable=no-self-use
+    def action(self, action_space, observation, info):  # pylint: disable=no-self-use
         """Mandatory method that calculates the move based on the observation array and the action space."""
-        _ = observation  # not using the observation for random decision
+        _ = (observation, info)  # not using the observation for random decision
         action = None
         while action is None:
             print(f"Choose action with number: {action_space}")
