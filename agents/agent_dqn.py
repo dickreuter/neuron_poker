@@ -7,9 +7,10 @@ from gym_env.env import Action
 autplay = True  # play automatically if played against keras-rl
 
 window_length = 1
+memory_limit = 200
 nb_steps_warmup = 100
 nb_max_start_steps = 100
-nb_steps = 1000
+nb_steps = 10000
 batch_size = 100
 
 
@@ -52,7 +53,7 @@ class Player:
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
-        memory = SequentialMemory(limit=200, window_length=window_length)
+        memory = SequentialMemory(limit=memory_limit, window_length=window_length)
         policy = BoltzmannQPolicy()
         from rl.core import Processor
 
@@ -69,7 +70,7 @@ class Player:
             def process_info(self, info):
                 processed_info = info['player_data']
                 if 'stack' in processed_info:
-                    del processed_info['stack']
+                    processed_info={'x': 1}
                 return processed_info
 
         nb_actions = env.action_space.n

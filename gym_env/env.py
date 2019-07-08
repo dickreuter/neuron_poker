@@ -16,6 +16,7 @@ from tools.montecarlo_python import get_equity
 __author__ = 'Nicolas Dickreuter'
 log = logging.getLogger(__name__)
 
+winner_in_episodes = []
 
 class CommunityData:
     """Data available to everybody"""
@@ -420,6 +421,12 @@ class HoldemTable(Env):
         self.funds_history.reset_index(drop=True).plot()
         log.info(self.funds_history)
         plt.show()
+
+        winner_in_episodes.append(self.winner_ix)
+        league_table = pd.Series(winner_in_episodes).value_counts()
+        best_player = league_table.index[0]
+        log.info(league_table)
+        log.info(f"Best Player: {best_player}")
 
     def _initiate_round(self):
         """A new round (flop, turn, river) is initiated"""
