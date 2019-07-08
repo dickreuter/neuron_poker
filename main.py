@@ -165,15 +165,11 @@ class Runner:
         """Implementation of kreras-rl deep q learing."""
         env_name = 'neuron_poker-v0'
         stack = 100
-        env = gym.make(env_name, num_of_players=5, initial_stacks=stack)
+        env = gym.make(env_name, num_of_players=2, initial_stacks=stack)
 
         np.random.seed(123)
         env.seed(123)
 
-        env.add_player(EquityPlayer(name='equity/50/50', min_call_equity=.5, min_bet_equity=-.5))
-        env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=-.8))
-        env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
-        env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=-.3))
         env.add_player(RandomPlayer())
         env.add_player(PlayerShell(name='keras-rl', stack_size=stack))  # shell is used for callback to keras rl
 

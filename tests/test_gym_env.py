@@ -165,9 +165,9 @@ def test_call_proper_amount():
 
     env.step(Action.ALL_IN)  # button raise
     assert env.min_call == raise_size
-    env.step(Action.CALL)   # sb calls but does not cover
+    env.step(Action.CALL)  # sb calls but does not cover
     assert env.min_call == raise_size
-    env.step(Action.CALL)   # bb calls full amount
-    assert env.stage_data[0].contribution[0] == raise_size
-    assert env.stage_data[0].contribution[1] == env.small_blind + 1
-    assert env.stage_data[0].contribution[2] == raise_size
+    env.step(Action.CALL)  # bb calls full amount
+    assert env.stage_data[0].contribution[0] == 0.03
+    assert env.stage_data[0].contribution[1] == 0.01
+    assert env.stage_data[0].contribution[2] == 0.03

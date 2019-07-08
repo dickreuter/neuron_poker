@@ -183,6 +183,7 @@ class HoldemTable(Env):
             else:
                 self._execute_step(Action(action))
 
+        log.info(f"Reward: {self.reward}")
         return self.array_everything, self.reward, self.done, self.info
 
     def _execute_step(self, action):
@@ -242,11 +243,9 @@ class HoldemTable(Env):
 
         self.observation = self.array_everything
 
-        self.info = {'array_everything': self.array_everything,
-                     'player_data': self.player_data.__dict__,
+        self.info = {'player_data': self.player_data.__dict__,
                      'community_data': self.community_data.__dict__,
-                     'stage_data': [stage.__dict__ for stage in self.stage_data]
-                     }
+                     'stage_data': [stage.__dict__ for stage in self.stage_data]}
 
         self._get_legal_moves()
 
@@ -263,7 +262,7 @@ class HoldemTable(Env):
         """
         if last_action == Action.FOLD:
             self.reward = -(
-                self.community_pot + self.current_round_pot)
+                    self.community_pot + self.current_round_pot)
         else:
             self.reward = self.player_data.equity_to_river_alive * (self.community_pot + self.current_round_pot) - \
                           (1 - self.player_data.equity_to_river_alive) * self.player_pots[self.current_player.seat]
@@ -345,10 +344,10 @@ class HoldemTable(Env):
             rnd = self.stage.value + self.second_round
             self.stage_data[rnd].calls[pos] = action == Action.CALL
             self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT]
-            self.stage_data[rnd].min_call_at_action[pos] = self.min_call
-            self.stage_data[rnd].community_pot_at_action[pos] = self.community_pot
-            self.stage_data[rnd].contribution[pos] += contribution
-            self.stage_data[rnd].stack_at_action[pos] = self.current_player.stack
+            self.stage_data[rnd].min_call_at_action[pos] = self.min_call / (self.big_blind * 100)
+            self.stage_data[rnd].community_pot_at_action[pos] = self.community_pot / (self.big_blind * 100)
+            self.stage_data[rnd].contribution[pos] += contribution / (self.big_blind * 100)
+            self.stage_data[rnd].stack_at_action[pos] = self.current_player.stack / (self.big_blind * 100)
 
         log.info(
             f"Seat {self.current_player.seat} ({self.current_player.name}): {action} - Remaining stack: {self.current_player.stack}, "

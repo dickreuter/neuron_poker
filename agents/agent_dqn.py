@@ -6,6 +6,12 @@ from gym_env.env import Action
 
 autplay = True  # play automatically if played against keras-rl
 
+window_length = 1
+nb_steps_warmup = 100
+nb_max_start_steps = 100
+nb_steps = 1000
+batch_size = 100
+
 
 class Player:
     """Mandatory class with the player methods"""
@@ -46,7 +52,7 @@ class Player:
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
-        memory = SequentialMemory(limit=200, window_length=1)
+        memory = SequentialMemory(limit=200, window_length=window_length)
         policy = BoltzmannQPolicy()
         from rl.core import Processor
 
@@ -68,16 +74,16 @@ class Player:
 
         nb_actions = env.action_space.n
 
-        self.dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=250,
+        self.dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
-                            batch_size=100)
+                            batch_size=batch_size)
         self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
     def train(self, env_name):
         """Train a model"""
         # initiate training loop
-        self.dqn.fit(self.env, nb_max_start_steps=50, nb_steps=1000, visualize=False, verbose=2)
+        self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=nb_steps, visualize=False, verbose=2)
 
         # After training is done, we save the final weights.
         self.dqn.save_weights('dqn_{}_weights.h5f'.format(env_name), overwrite=True)
