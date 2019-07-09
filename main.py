@@ -169,8 +169,11 @@ class Runner:
 
         np.random.seed(123)
         env.seed(123)
-
-        env.add_player(RandomPlayer())
+        env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
+        # env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=-.3))
+        # env.add_player(RandomPlayer())
+        # env.add_player(RandomPlayer())
+        # env.add_player(RandomPlayer())
         env.add_player(PlayerShell(name='keras-rl', stack_size=stack))  # shell is used for callback to keras rl
 
         env.reset()

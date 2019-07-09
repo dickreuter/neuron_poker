@@ -1,6 +1,7 @@
 """Player based on a trained neural network"""
 
 import numpy as np
+from rl.policy import BoltzmannQPolicy
 
 from gym_env.env import Action
 
@@ -54,7 +55,7 @@ class Player:
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
         memory = SequentialMemory(limit=memory_limit, window_length=window_length)
-        policy = BoltzmannQPolicy()
+        policy = TrumpPolicy()
         from rl.core import Processor
 
         class CustomProcessor(Processor):
@@ -70,7 +71,7 @@ class Player:
             def process_info(self, info):
                 processed_info = info['player_data']
                 if 'stack' in processed_info:
-                    processed_info={'x': 1}
+                    processed_info = {'x': 1}
                 return processed_info
 
         nb_actions = env.action_space.n
@@ -81,10 +82,17 @@ class Player:
                             batch_size=batch_size)
         self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
+    def start_step_policy(self, observation):
+        print("Random step")
+        action = self.env.action_space.sample()
+        return action
+
     def train(self, env_name):
         """Train a model"""
         # initiate training loop
-        self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=nb_steps, visualize=False, verbose=2)
+
+        self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=nb_steps, visualize=False, verbose=2,
+                     start_step_policy=self.start_step_policy)
 
         # After training is done, we save the final weights.
         self.dqn.save_weights('dqn_{}_weights.h5f'.format(env_name), overwrite=True)
@@ -106,4 +114,25 @@ class Player:
         _ = this_player_action_space.intersection(set(action_space))
 
         action = None
+        return action
+
+
+class TrumpPolicy(BoltzmannQPolicy):
+    def select_action(self, q_values):
+        """Return the selected action
+
+        # Arguments
+            q_values (np.ndarray): List of the estimations of Q for each action
+
+        # Returns
+            Selection action
+        """
+        assert q_values.ndim == 1
+        q_values = q_values.astype('float64')
+        nb_actions = q_values.shape[0]
+
+        exp_values = np.exp(np.clip(q_values / self.tau, self.clip[0], self.clip[1]))
+        probs = exp_values / np.sum(exp_values)
+        action = np.random.choice(range(nb_actions), p=probs)
+        print ("Chosen action")
         return action

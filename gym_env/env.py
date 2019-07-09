@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 
 winner_in_episodes = []
 
+
 class CommunityData:
     """Data available to everybody"""
 
@@ -217,8 +218,8 @@ class HoldemTable(Env):
         self.info = None
 
         self.community_data = CommunityData(len(self.players))
-        self.community_data.community_pot = self.community_pot
-        self.community_data.current_round_pot = self.current_round_pot
+        self.community_data.community_pot = self.community_pot / (self.big_blind * 100)
+        self.community_data.current_round_pot = self.current_round_pot / (self.big_blind * 100)
         self.community_data.small_blind = self.small_blind
         self.community_data.big_blind = self.big_blind
         self.community_data.stage[np.minimum(self.stage.value, 3)] = 1
@@ -239,6 +240,7 @@ class HoldemTable(Env):
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))
         arr2 = np.array(list(flatten(self.community_data.__dict__.values())))
         arr3 = np.array([list(flatten(sd.__dict__.values())) for sd in self.stage_data]).flatten()
+        arr_legal_only = np.array(self.community_data.legal_moves).flatten()
 
         self.array_everything = np.concatenate([arr1, arr2, arr3]).flatten()
 
