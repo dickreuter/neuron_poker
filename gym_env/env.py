@@ -118,6 +118,7 @@ class HoldemTable(Env):
         self.action = None
         self.winner_ix = None
         self.initial_stacks = initial_stacks
+        self.acting_agent = None
 
         # pots
         self.community_pot = 0
@@ -133,6 +134,7 @@ class HoldemTable(Env):
         self.legal_moves = None
         self.illegal_move_reward = -1000
         self.action_space = Discrete(len(Action))
+        self.first_action_for_hand = None
 
     def reset(self):
         """Reset after game over."""
@@ -141,6 +143,8 @@ class HoldemTable(Env):
         self.info = None
         self.done = False
         self.funds_history = pd.DataFrame()
+        self.first_action_for_hand = [True] * len(self.players)
+
         for player in self.players:
             player.stack = self.initial_stacks
 
@@ -166,7 +170,8 @@ class HoldemTable(Env):
         # until either the env id sone, or an agent is just a shell and
         # and will get a call from to the step function externally (e.g. via
         # keras-rl
-
+        self.reward = 0
+        self.acting_agent = self.player_cycle.idx
         if self._agent_is_autoplay():
             while self._agent_is_autoplay() and not self.done:
                 log.debug("Autoplay agent. Call action method of agent.")
@@ -177,6 +182,9 @@ class HoldemTable(Env):
                     self._illegal_move(action)
                 else:
                     self._execute_step(Action(action))
+                    if self.first_action_for_hand[self.acting_agent]:
+                        self.first_action_for_hand[self.acting_agent] = False
+                        self._calculate_reward(action)
 
         else:  # action received from player shell (e.g. keras rl, not autoplay)
             self._get_environment()  # get legal moves
@@ -184,8 +192,11 @@ class HoldemTable(Env):
                 self._illegal_move(action)
             else:
                 self._execute_step(Action(action))
+                if self.first_action_for_hand[self.acting_agent]:
+                    self.first_action_for_hand[self.acting_agent] = False
+                    self._calculate_reward(action)
 
-        log.info(f"Reward: {self.reward}")
+        log.info(f"Reward for {self.acting_agent}: {self.reward}")
         return self.array_everything, self.reward, self.done, self.info
 
     def _execute_step(self, action):
@@ -199,7 +210,6 @@ class HoldemTable(Env):
 
         self.player_cycle.update_alive()
         self._get_environment()
-        self._calculate_reward(action)
 
     def _illegal_move(self, action):
         log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
@@ -214,7 +224,7 @@ class HoldemTable(Env):
             self._get_legal_moves()
 
         self.observation = None
-        self.reward = None
+        self.reward = 0
         self.info = None
 
         self.community_data = CommunityData(len(self.players))
@@ -263,12 +273,16 @@ class HoldemTable(Env):
 
         - Currently missing potential additional winnings fro future contributions
         """
-        if last_action == Action.FOLD:
-            self.reward = -(
-                    self.community_pot + self.current_round_pot)
-        else:
-            self.reward = self.player_data.equity_to_river_alive * (self.community_pot + self.current_round_pot) - \
-                          (1 - self.player_data.equity_to_river_alive) * self.player_pots[self.current_player.seat]
+        # if last_action == Action.FOLD:
+        #     self.reward = -(
+        #             self.community_pot + self.current_round_pot)
+        # else:
+        #     self.reward = self.player_data.equity_to_river_alive * (self.community_pot + self.current_round_pot) - \
+        #                   (1 - self.player_data.equity_to_river_alive) * self.player_pots[self.current_player.seat]
+        _ = last_action
+        if len(self.funds_history) > 1:
+            self.reward = self.funds_history.iloc[-1, self.acting_agent] - self.funds_history.iloc[-2, self.acting_agent]
+
 
     def _process_decision(self, action):  # pylint: disable=too-many-statements
         """Process the decisions that have been made by an agent."""
@@ -382,6 +396,7 @@ class HoldemTable(Env):
         self.player_max_win = [0] * len(self.players)
         self.last_player_pot = 0
         self.played_in_round = 0
+        self.first_action_for_hand = [True] * len(self.players)
 
         for player in self.players:
             player.cards = []
