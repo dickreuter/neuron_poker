@@ -9,8 +9,8 @@ autplay = True  # play automatically if played against keras-rl
 
 window_length = 1
 memory_limit = 200
-nb_steps_warmup = 100
-nb_max_start_steps = 100
+nb_steps_warmup = 75  # before training starts, should be higher than start steps
+nb_max_start_steps = 20  # random action
 nb_steps = 10000
 batch_size = 100
 

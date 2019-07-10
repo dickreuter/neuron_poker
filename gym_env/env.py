@@ -196,7 +196,7 @@ class HoldemTable(Env):
                     self.first_action_for_hand[self.acting_agent] = False
                     self._calculate_reward(action)
 
-        log.info(f"Previous action reward for seat {self.acting_agent}: {self.reward}")
+            log.info(f"Previous action reward for seat {self.acting_agent}: {self.reward}")
         return self.array_everything, self.reward, self.done, self.info
 
     def _execute_step(self, action):
