@@ -18,7 +18,7 @@ batch_size = 100
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, name='DQN'):
+    def __init__(self, name='DQN', load_model=None):
         """Initiaization of an agent"""
         self.equity_alive = 0
         self.actions = []
@@ -30,6 +30,9 @@ class Player:
         self.dqn = None
         self.env = None
 
+        if load_model:
+            self.load(load_model)
+
     def initiate_agent(self, env):
         """initiate a deep Q agent"""
         from keras import Sequential
@@ -37,7 +40,6 @@ class Player:
         from keras.layers import Dense, Dropout
         from rl.memory import SequentialMemory
         from rl.agents import DQNAgent
-        from rl.policy import BoltzmannQPolicy
 
         self.env = env
 
@@ -83,7 +85,9 @@ class Player:
         self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
     def start_step_policy(self, observation):
+        """Custom policy for random decisions for warm up."""
         print("Random step")
+        _ = observation
         action = self.env.action_space.sample()
         return action
 
@@ -118,6 +122,8 @@ class Player:
 
 
 class TrumpPolicy(BoltzmannQPolicy):
+    """Custom policy when making decision based on neural network."""
+
     def select_action(self, q_values):
         """Return the selected action
 
@@ -134,5 +140,5 @@ class TrumpPolicy(BoltzmannQPolicy):
         exp_values = np.exp(np.clip(q_values / self.tau, self.clip[0], self.clip[1]))
         probs = exp_values / np.sum(exp_values)
         action = np.random.choice(range(nb_actions), p=probs)
-        print ("Chosen action")
+        print("Chosen action")
         return action

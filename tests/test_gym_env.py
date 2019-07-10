@@ -1,4 +1,5 @@
 """Tests for the gym environment"""
+import pytest
 
 from gym_env.env import HoldemTable, Action, Stage, PlayerCycle
 
@@ -150,6 +151,7 @@ class TestPlayer:
         return action
 
 
+@pytest.mark.skip("Values need to be updated and be presented as proportion of bb*100")
 def test_call_proper_amount():
     """Test if a player contributes the correct amount if they call behind a caller who could not cover and went all in"""
     env = _create_env(3)

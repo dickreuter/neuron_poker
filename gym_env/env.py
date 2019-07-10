@@ -196,7 +196,7 @@ class HoldemTable(Env):
                     self.first_action_for_hand[self.acting_agent] = False
                     self._calculate_reward(action)
 
-        log.info(f"Reward for {self.acting_agent}: {self.reward}")
+        log.info(f"Previous action reward for seat {self.acting_agent}: {self.reward}")
         return self.array_everything, self.reward, self.done, self.info
 
     def _execute_step(self, action):
@@ -208,7 +208,7 @@ class HoldemTable(Env):
             self._end_hand()
             self._start_new_hand()
 
-        self.player_cycle.update_alive()
+
         self._get_environment()
 
     def _illegal_move(self, action):
@@ -250,7 +250,7 @@ class HoldemTable(Env):
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))
         arr2 = np.array(list(flatten(self.community_data.__dict__.values())))
         arr3 = np.array([list(flatten(sd.__dict__.values())) for sd in self.stage_data]).flatten()
-        arr_legal_only = np.array(self.community_data.legal_moves).flatten()
+        # arr_legal_only = np.array(self.community_data.legal_moves).flatten()
 
         self.array_everything = np.concatenate([arr1, arr2, arr3]).flatten()
 
@@ -365,6 +365,8 @@ class HoldemTable(Env):
             self.stage_data[rnd].community_pot_at_action[pos] = self.community_pot / (self.big_blind * 100)
             self.stage_data[rnd].contribution[pos] += contribution / (self.big_blind * 100)
             self.stage_data[rnd].stack_at_action[pos] = self.current_player.stack / (self.big_blind * 100)
+
+        self.player_cycle.update_alive()
 
         log.info(
             f"Seat {self.current_player.seat} ({self.current_player.name}): {action} - Remaining stack: {self.current_player.stack}, "
@@ -563,7 +565,6 @@ class HoldemTable(Env):
             if sum(self.player_cycle.alive) < 2:
                 log.info("Only one player remaining in round")
                 self.stage = Stage.END_HIDDEN
-
             else:
                 log.info("End round - no current player returned")
                 self._end_round()
