@@ -1,9 +1,12 @@
 """Player based on a trained neural network"""
 
+import time
+
 import numpy as np
-from rl.policy import BoltzmannQPolicy
 
 from gym_env.env import Action
+from keras.callbacks import TensorBoard
+from rl.policy import BoltzmannQPolicy
 
 autplay = True  # play automatically if played against keras-rl
 
@@ -94,9 +97,12 @@ class Player:
     def train(self, env_name):
         """Train a model"""
         # initiate training loop
+        timestr = time.strftime("%Y%m%d-%H%M%S") + "_" + str(env_name)
+        tensorboard = TensorBoard(log_dir='./Graph/{}'.format(timestr), histogram_freq=0, write_graph=True,
+                                  write_images=False)
 
         self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=nb_steps, visualize=False, verbose=2,
-                     start_step_policy=self.start_step_policy)
+                     start_step_policy=self.start_step_policy, callbacks=[tensorboard])
 
         # After training is done, we save the final weights.
         self.dqn.save_weights('dqn_{}_weights.h5f'.format(env_name), overwrite=True)
