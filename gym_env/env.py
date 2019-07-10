@@ -568,6 +568,7 @@ class HoldemTable(Env):
             else:
                 log.info("End round - no current player returned")
                 self._end_round()
+                # todo: in some cases no new round should be initialized bc only one player is playing only it seems
                 self._initiate_round()
 
         elif self.current_player == 'max_steps_total' or self.current_player == 'max_steps_after_raiser':
