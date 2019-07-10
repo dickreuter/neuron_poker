@@ -1,16 +1,24 @@
 """Player based on a trained neural network"""
 
 import numpy as np
+from rl.policy import BoltzmannQPolicy
 
 from gym_env.env import Action
 
 autplay = True  # play automatically if played against keras-rl
 
+window_length = 1
+memory_limit = 200
+nb_steps_warmup = 100
+nb_max_start_steps = 100
+nb_steps = 10000
+batch_size = 100
+
 
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, name='DQN'):
+    def __init__(self, name='DQN', load_model=None):
         """Initiaization of an agent"""
         self.equity_alive = 0
         self.actions = []
@@ -22,6 +30,9 @@ class Player:
         self.dqn = None
         self.env = None
 
+        if load_model:
+            self.load(load_model)
+
     def initiate_agent(self, env):
         """initiate a deep Q agent"""
         from keras import Sequential
@@ -29,7 +40,6 @@ class Player:
         from keras.layers import Dense, Dropout
         from rl.memory import SequentialMemory
         from rl.agents import DQNAgent
-        from rl.policy import BoltzmannQPolicy
 
         self.env = env
 
@@ -46,8 +56,8 @@ class Player:
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
-        memory = SequentialMemory(limit=200, window_length=1)
-        policy = BoltzmannQPolicy()
+        memory = SequentialMemory(limit=memory_limit, window_length=window_length)
+        policy = TrumpPolicy()
         from rl.core import Processor
 
         class CustomProcessor(Processor):
@@ -63,21 +73,30 @@ class Player:
             def process_info(self, info):
                 processed_info = info['player_data']
                 if 'stack' in processed_info:
-                    del processed_info['stack']
+                    processed_info = {'x': 1}
                 return processed_info
 
         nb_actions = env.action_space.n
 
-        self.dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=250,
+        self.dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
-                            batch_size=100)
+                            batch_size=batch_size)
         self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
+
+    def start_step_policy(self, observation):
+        """Custom policy for random decisions for warm up."""
+        print("Random step")
+        _ = observation
+        action = self.env.action_space.sample()
+        return action
 
     def train(self, env_name):
         """Train a model"""
         # initiate training loop
-        self.dqn.fit(self.env, nb_max_start_steps=50, nb_steps=1000, visualize=False, verbose=2)
+
+        self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=nb_steps, visualize=False, verbose=2,
+                     start_step_policy=self.start_step_policy)
 
         # After training is done, we save the final weights.
         self.dqn.save_weights('dqn_{}_weights.h5f'.format(env_name), overwrite=True)
@@ -99,4 +118,27 @@ class Player:
         _ = this_player_action_space.intersection(set(action_space))
 
         action = None
+        return action
+
+
+class TrumpPolicy(BoltzmannQPolicy):
+    """Custom policy when making decision based on neural network."""
+
+    def select_action(self, q_values):
+        """Return the selected action
+
+        # Arguments
+            q_values (np.ndarray): List of the estimations of Q for each action
+
+        # Returns
+            Selection action
+        """
+        assert q_values.ndim == 1
+        q_values = q_values.astype('float64')
+        nb_actions = q_values.shape[0]
+
+        exp_values = np.exp(np.clip(q_values / self.tau, self.clip[0], self.clip[1]))
+        probs = exp_values / np.sum(exp_values)
+        action = np.random.choice(range(nb_actions), p=probs)
+        print("Chosen action")
         return action
