@@ -132,8 +132,8 @@ class HoldemTable(Env):
         self.funds_history = None
         self.array_everything = None
         self.legal_moves = None
-        self.illegal_move_reward = -1000
-        self.action_space = Discrete(len(Action))
+        self.illegal_move_reward = -self.initial_stacks
+        self.action_space = Discrete(len(Action) - 2)
         self.first_action_for_hand = None
 
     def reset(self):
@@ -182,7 +182,7 @@ class HoldemTable(Env):
                     self._illegal_move(action)
                 else:
                     self._execute_step(Action(action))
-                    if self.first_action_for_hand[self.acting_agent]:
+                    if self.first_action_for_hand[self.acting_agent] or self.done:
                         self.first_action_for_hand[self.acting_agent] = False
                         self._calculate_reward(action)
 
@@ -192,7 +192,7 @@ class HoldemTable(Env):
                 self._illegal_move(action)
             else:
                 self._execute_step(Action(action))
-                if self.first_action_for_hand[self.acting_agent]:
+                if self.first_action_for_hand[self.acting_agent] or self.done:
                     self.first_action_for_hand[self.acting_agent] = False
                     self._calculate_reward(action)
 
@@ -208,15 +208,16 @@ class HoldemTable(Env):
             self._end_hand()
             self._start_new_hand()
 
-
         self._get_environment()
 
     def _illegal_move(self, action):
         log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
         self.reward = self.illegal_move_reward
 
-    def _agent_is_autoplay(self):
-        return hasattr(self.current_player.agent_obj, 'autoplay')
+    def _agent_is_autoplay(self, idx=None):
+        if not idx:
+            return hasattr(self.current_player.agent_obj, 'autoplay')
+        return hasattr(self.players[idx].agent_obj, 'autoplay')
 
     def _get_environment(self):
         """Observe the environment"""
@@ -280,9 +281,17 @@ class HoldemTable(Env):
         #     self.reward = self.player_data.equity_to_river_alive * (self.community_pot + self.current_round_pot) - \
         #                   (1 - self.player_data.equity_to_river_alive) * self.player_pots[self.current_player.seat]
         _ = last_action
-        if len(self.funds_history) > 1:
-            self.reward = self.funds_history.iloc[-1, self.acting_agent] - self.funds_history.iloc[-2, self.acting_agent]
+        if self.done:
+            won = 1 if not self._agent_is_autoplay(idx=self.winner_ix) else -1
+            self.reward = self.initial_stacks * len(self.players) * won
+            log.debug(f"Keras-rl agent has reward {self.reward}")
 
+        elif len(self.funds_history) > 1:
+            self.reward = self.funds_history.iloc[-1, self.acting_agent] - self.funds_history.iloc[
+                -2, self.acting_agent]
+
+        else:
+            pass
 
     def _process_decision(self, action):  # pylint: disable=too-many-statements
         """Process the decisions that have been made by an agent."""

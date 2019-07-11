@@ -1,5 +1,5 @@
 """Player based on a trained neural network"""
-
+import logging
 import time
 
 import numpy as np
@@ -16,6 +16,8 @@ nb_steps_warmup = 75  # before training starts, should be higher than start step
 nb_max_start_steps = 20  # random action
 nb_steps = 10000
 batch_size = 100
+
+log = logging.getLogger(__name__)
 
 
 class Player:
@@ -89,7 +91,7 @@ class Player:
 
     def start_step_policy(self, observation):
         """Custom policy for random decisions for warm up."""
-        print("Random step")
+        log.info("Random action")
         _ = observation
         action = self.env.action_space.sample()
         return action
@@ -146,5 +148,5 @@ class TrumpPolicy(BoltzmannQPolicy):
         exp_values = np.exp(np.clip(q_values / self.tau, self.clip[0], self.clip[1]))
         probs = exp_values / np.sum(exp_values)
         action = np.random.choice(range(nb_actions), p=probs)
-        print("Chosen action")
+        log.info(f"Chosen action by keras-rl {action} - probabilities: {probs}")
         return action
