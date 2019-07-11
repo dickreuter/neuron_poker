@@ -1,18 +1,23 @@
 """Player based on a trained neural network"""
+import logging
+import time
 
 import numpy as np
-from rl.policy import BoltzmannQPolicy
 
 from gym_env.env import Action
+from keras.callbacks import TensorBoard
+from rl.policy import BoltzmannQPolicy
 
 autplay = True  # play automatically if played against keras-rl
 
 window_length = 1
 memory_limit = 200
-nb_steps_warmup = 100
-nb_max_start_steps = 100
+nb_steps_warmup = 75  # before training starts, should be higher than start steps
+nb_max_start_steps = 20  # random action
 nb_steps = 10000
 batch_size = 100
+
+log = logging.getLogger(__name__)
 
 
 class Player:
@@ -86,7 +91,7 @@ class Player:
 
     def start_step_policy(self, observation):
         """Custom policy for random decisions for warm up."""
-        print("Random step")
+        log.info("Random action")
         _ = observation
         action = self.env.action_space.sample()
         return action
@@ -94,9 +99,12 @@ class Player:
     def train(self, env_name):
         """Train a model"""
         # initiate training loop
+        timestr = time.strftime("%Y%m%d-%H%M%S") + "_" + str(env_name)
+        tensorboard = TensorBoard(log_dir='./Graph/{}'.format(timestr), histogram_freq=0, write_graph=True,
+                                  write_images=False)
 
         self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=nb_steps, visualize=False, verbose=2,
-                     start_step_policy=self.start_step_policy)
+                     start_step_policy=self.start_step_policy, callbacks=[tensorboard])
 
         # After training is done, we save the final weights.
         self.dqn.save_weights('dqn_{}_weights.h5f'.format(env_name), overwrite=True)
@@ -140,5 +148,5 @@ class TrumpPolicy(BoltzmannQPolicy):
         exp_values = np.exp(np.clip(q_values / self.tau, self.clip[0], self.clip[1]))
         probs = exp_values / np.sum(exp_values)
         action = np.random.choice(range(nb_actions), p=probs)
-        print("Chosen action")
+        log.info(f"Chosen action by keras-rl {action} - probabilities: {probs}")
         return action
