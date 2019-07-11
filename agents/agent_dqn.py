@@ -1,4 +1,5 @@
 """Player based on a trained neural network"""
+# pylint: disable=wrong-import-order
 import logging
 import time
 
@@ -11,11 +12,11 @@ from rl.policy import BoltzmannQPolicy
 autplay = True  # play automatically if played against keras-rl
 
 window_length = 1
-memory_limit = 200
-nb_steps_warmup = 75  # before training starts, should be higher than start steps
 nb_max_start_steps = 20  # random action
+nb_steps_warmup = 75  # before training starts, should be higher than start steps
 nb_steps = 10000
-batch_size = 100
+memory_limit = int(nb_steps / 3)
+batch_size = 500  # items sampled from memory to train
 
 log = logging.getLogger(__name__)
 
