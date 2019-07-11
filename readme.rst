@@ -154,11 +154,53 @@ information:
 Final analysis:
 ^^^^^^^^^^^^^^^
 
-At the end of the game the performance of the players can be observed.
+At the end of an episode, the performance of the players can be observed via the summary plot.
 |image0|
 
-Github
+
+Reinforcement learning agent
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``neuron_poker.agents.agent_dqn`` implements a deep q agent with help of keras-rl.
+A number of parameters can be se:
+
+- nb_max_start_steps = 20  # maximum of random actions at the beginning
+- nb_steps_warmup = 75  # before training starts, should be higher than start steps
+- nb_steps = 10000  # total number of steps
+- memory_limit = int(nb_steps / 3)  # limiting the memory of experience replay
+- batch_size = 500  # number of items sampled from memory to train
+
+Training can be observed via tensorboard (run ``tensorboard --logdir=./Graph`` from command line)
+|image2|
+
+Agents
 ^^^^^^
+
+- [x] Agent based on user interaction (keypress)
+- [x] Random agent
+- [x] Equity based strategy (i.e. call and bet above threshold)
+- [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
+- [/] Reinforcement learning with experience replay
+- [ ] Deep SARSA [[10]](http://people.inf.elte.hu/lorincz/Files/RL_2006/SuttonBook.pdf)
+- [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
+- [ ] Proximal Policy Optimization Algorithms (PPO) [[11]](https://arxiv.org/abs/1707.06347)
+
+
+Roadmap
+-------
+- [x] Build an openai gym environment for texas holdem
+- [/] Iron out bugs (your help is required)
+- [ ] Add more agents
+
+Current league table
+--------------------
+
+#)  Equity based player
+#)  Random player
+
+
+Github
+------
 
 It will be hard for one person alone to beat the world at poker. That's
 why this repo aims to have a collaborative environment, where models can
@@ -179,29 +221,6 @@ To contribute do the following:
 - Create a pull request on your github.com to merge your branch with the upstream master.
 - When your pull request is approved, it will be merged into the upstream/master.
 
-Agents
-------
-
-- [x] Agent based on user interaction (keypress)
-- [x] Random agent
-- [x] Equity based strategy (i.e. call and bet above threshold)
-- [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
-- [/] Reinforcement learning with experience replay
-- [ ] Deep SARSA [[10]](http://people.inf.elte.hu/lorincz/Files/RL_2006/SuttonBook.pdf)
-- [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
-- [ ] Proximal Policy Optimization Algorithms (PPO) [[11]](https://arxiv.org/abs/1707.06347)
-
-Roadmap
--------
-- [x] Build an openai gym environment for texas holdem
-- [/] Iron out bugs (your help is required)
-- [ ] Add more agents
-
-Current league table
---------------------
-
-#)  Equity based player
-#)  Random player
-
 .. |image0| image:: doc/pots.png
 .. |image1| image:: doc/pytest.png
+.. |image2| image:: doc/tensorboard-example.png
