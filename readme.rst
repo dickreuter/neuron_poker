@@ -18,7 +18,14 @@ Run:
 -  Example of genetic algorighm with self improvement: ``main.py equity_improvement --improvement_rounds=20 --episodes=10``
 
 .. figure:: doc/table.png
-   :alt: 
+   :alt:
+
+
+Analysis of the run
+~~~~~~~~~~~~~~~~~~~
+
+At the end of an episode, the performance of the players can be observed via the summary plot.
+|image0|
 
 Packages and modules:
 ~~~~~~~~~~~~~~~~~~~~~
@@ -27,13 +34,13 @@ main.py: entry point and command line interpreter. Runs agents with the
 gym.
 
 gym\_env
-^^^^^^^^
+~~~~~~~~
 
 -  ``env.py``: Texas Hold’em unlimited openai gym environment &
    ``rendering.py``: rendering graphics while playing
 
 agents
-^^^^^^
+~~~~~~
 Please add your model based agents here.
 
 -  ``agent_random.py``: an agent making random decisions
@@ -43,7 +50,7 @@ Please add your model based agents here.
 Note that the observation property is a dictionary that contains all the information about the players and table that can be used to make a decision.
 
 tools
-^^^^^
+~~~~~
 
 -  ``hand_evaluator.py``: evaluate the best hand of multiple players
 -  ``helper.py``: helper functions
@@ -61,11 +68,44 @@ tests
 -  ``test_montecarlo_numpy.py``: tests for the numpy montecarlo
 -  ``test_pylint.py``: pylint and pydoc tests to ensure pep8 standards and static code analysis
 
-How to contribute
-~~~~~~~~~~~~~~~~~
 
-Launching
-^^^^^^^^^
+Roadmap
+-------
+
+Agents
+~~~~~~
+
+- [x] Agent based on user interaction (keypress)
+- [x] Random agent
+- [x] Equity based strategy (i.e. call and bet above threshold)
+- [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
+- [x] Reinforcement learning with experience replay (Deep Q learning)
+- [ ] Deep SARSA [[10]](http://people.inf.elte.hu/lorincz/Files/RL_2006/SuttonBook.pdf)
+- [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
+- [ ] Monte Carlo counterfactual regret minimization (MCCFR) [[7]](https://science.sciencemag.org/content/early/2019/07/10/science.aay2400)
+
+
+Reinforcement learning: Deep Q agent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``neuron_poker.agents.agent_dqn`` implements a deep q agent with help of keras-rl.
+A number of parameters can be se:
+
+- nb_max_start_steps = 20  # maximum of random actions at the beginning
+- nb_steps_warmup = 75  # before training starts, should be higher than start steps
+- nb_steps = 10000  # total number of steps
+- memory_limit = int(nb_steps / 3)  # limiting the memory of experience replay
+- batch_size = 500  # number of items sampled from memory to train
+
+Training can be observed via tensorboard (run ``tensorboard --logdir=./Graph`` from command line)
+|image2|
+
+
+How to contribute
+-----------------
+
+Launching from main.py
+~~~~~~~~~~~~~~~~~~~~~~
 
 In ``main.py`` an agent is launched as follows (here adding 6 random
 agents to the table). To edit what is accepted to main.py via command
@@ -110,8 +150,8 @@ agent itself, as a parameter to determine the best action.
         action = random.choice(list(possible_moves))
         return action
 
-Observation
-^^^^^^^^^^^
+Observing the state
+~~~~~~~~~~~~~~~~~~~
 
 The state is represented as a numpy array that contains the following
 information:
@@ -151,56 +191,8 @@ information:
             self.equity_to_river_3plr: montecarlo
             self.stack: current player stack
 
-Final analysis:
-^^^^^^^^^^^^^^^
-
-At the end of an episode, the performance of the players can be observed via the summary plot.
-|image0|
-
-
-Reinforcement learning agent
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``neuron_poker.agents.agent_dqn`` implements a deep q agent with help of keras-rl.
-A number of parameters can be se:
-
-- nb_max_start_steps = 20  # maximum of random actions at the beginning
-- nb_steps_warmup = 75  # before training starts, should be higher than start steps
-- nb_steps = 10000  # total number of steps
-- memory_limit = int(nb_steps / 3)  # limiting the memory of experience replay
-- batch_size = 500  # number of items sampled from memory to train
-
-Training can be observed via tensorboard (run ``tensorboard --logdir=./Graph`` from command line)
-|image2|
-
-Agents
-^^^^^^
-
-- [x] Agent based on user interaction (keypress)
-- [x] Random agent
-- [x] Equity based strategy (i.e. call and bet above threshold)
-- [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
-- [/] Reinforcement learning with experience replay
-- [ ] Deep SARSA [[10]](http://people.inf.elte.hu/lorincz/Files/RL_2006/SuttonBook.pdf)
-- [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
-- [ ] Proximal Policy Optimization Algorithms (PPO) [[11]](https://arxiv.org/abs/1707.06347)
-
-
-Roadmap
--------
-- [x] Build an openai gym environment for texas holdem
-- [/] Iron out bugs (your help is required)
-- [ ] Add more agents
-
-Current league table
---------------------
-
-#)  Equity based player
-#)  Random player
-
-
-Github
-------
+How to integrate your code on Github
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It will be hard for one person alone to beat the world at poker. That's
 why this repo aims to have a collaborative environment, where models can
