@@ -13,10 +13,12 @@ autplay = True  # play automatically if played against keras-rl
 
 window_length = 1
 nb_max_start_steps = 20  # random action
+train_interval = 100  # random action
 nb_steps_warmup = 75  # before training starts, should be higher than start steps
-nb_steps = 10000
-memory_limit = int(nb_steps / 3)
+nb_steps = 25000
+memory_limit = int(nb_steps / 10)
 batch_size = 500  # items sampled from memory to train
+enable_double_dqn = False
 
 log = logging.getLogger(__name__)
 
@@ -87,7 +89,7 @@ class Player:
         self.dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
-                            batch_size=batch_size)
+                            batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
         self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
     def start_step_policy(self, observation):
@@ -108,14 +110,14 @@ class Player:
                      start_step_policy=self.start_step_policy, callbacks=[tensorboard])
 
         # After training is done, we save the final weights.
-        self.dqn.save_weights('dqn_{}_weights.h5f'.format(env_name), overwrite=True)
+        self.dqn.save_weights('dqn_{}_weights.h5'.format(env_name), overwrite=True)
 
         # Finally, evaluate our algorithm for 5 episodes.
         self.dqn.test(self.env, nb_episodes=5, visualize=False)
 
     def load(self, env_name):
         """Load a model"""
-        self.dqn.load_weights('dqn_{}_weights.h5f'.format(env_name))
+        self.dqn.load_weights('dqn_{}_weights.h5'.format(env_name))
 
     def action(self, action_space, observation, info):  # pylint: disable=no-self-use
         """Mandatory method that calculates the move based on the observation array and the action space."""

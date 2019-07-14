@@ -170,7 +170,7 @@ class Runner:
         """Implementation of kreras-rl deep q learing."""
         env_name = 'neuron_poker-v0'
         stack = 100
-        env = gym.make(env_name, num_of_players=2, initial_stacks=stack)
+        env = gym.make(env_name, num_of_players=2, initial_stacks=stack, funds_plot=False)
 
         np.random.seed(123)
         env.seed(123)

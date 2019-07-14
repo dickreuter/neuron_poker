@@ -88,8 +88,21 @@ class Stage(Enum):
 class HoldemTable(Env):
     """Pokergame environment"""
 
-    def __init__(self, num_of_players=6, initial_stacks=100, small_blind=1, big_blind=2, render=False):
-        """The table needs to be initialized once at the beginning"""
+    def __init__(self, num_of_players=6, initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
+                 max_raising_rounds=2):
+        """
+        The table needs to be initialized once at the beginning
+
+        Args:
+            num_of_players (int): number of players that need to be added
+            initial_stacks (real): initial stacks per placyer
+            small_blind (real)
+            big_blind (real)
+            render (bool): render table after each move in graphical format
+            funds_plot (bool): show plot of funds history at end of each episode
+            max_raising_rounds (int): max raises per round per player
+
+        """
         self.num_of_players = num_of_players
         self.small_blind = small_blind
         self.big_blind = big_blind
@@ -119,6 +132,8 @@ class HoldemTable(Env):
         self.winner_ix = None
         self.initial_stacks = initial_stacks
         self.acting_agent = None
+        self.funds_plot = funds_plot
+        self.max_round_raising = max_raising_rounds
 
         # pots
         self.community_pot = 0
@@ -446,7 +461,8 @@ class HoldemTable(Env):
         self.done = True
         player_names = [f"{i} - {player.name}" for i, player in enumerate(self.players)]
         self.funds_history.columns = player_names
-        self.funds_history.reset_index(drop=True).plot()
+        if self.funds_plot:
+            self.funds_history.reset_index(drop=True).plot()
         log.info(self.funds_history)
         plt.show()
 
@@ -471,7 +487,7 @@ class HoldemTable(Env):
             log.info("")
             log.info("===Round: Stage: PREFLOP")
             # max steps total will be adjusted again at bb
-            self.player_cycle.max_steps_total = len(self.players) * 2 + 2
+            self.player_cycle.max_steps_total = len(self.players) * self.max_round_raising + 2
 
             self._next_player()
             self._process_decision(Action.SMALL_BLIND)
@@ -480,7 +496,7 @@ class HoldemTable(Env):
             self._next_player()
 
         elif self.stage in [Stage.FLOP, Stage.TURN, Stage.RIVER]:
-            self.player_cycle.max_steps_total = len(self.players) * 2
+            self.player_cycle.max_steps_total = len(self.players) * self.max_round_raising
 
             self._next_player()
 
