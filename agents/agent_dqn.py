@@ -54,12 +54,12 @@ class Player:
         nb_actions = self.env.action_space.n
 
         model = Sequential()
-        model.add(Dense(128, activation='relu', input_shape=env.observation_space))
-        model.add(Dropout(0.1))
-        model.add(Dense(64, activation='relu'))
-        model.add(Dropout(0.1))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dropout(0.1))
+        model.add(Dense(512, activation='relu', input_shape=env.observation_space))
+        model.add(Dropout(0.2))
+        model.add(Dense(512, activation='relu'))
+        model.add(Dropout(0.2))
+        model.add(Dense(512, activation='relu'))
+        model.add(Dropout(0.2))
         model.add(Dense(nb_actions, activation='linear'))
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
