@@ -9,3 +9,4 @@ pyglet
 keras
 keras-rl
 docopt
+tensorflow
