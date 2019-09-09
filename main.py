@@ -2,6 +2,7 @@
 neuron poker
 
 Usage:
+  main.py uto [options]
   main.py random [options]
   main.py keypress [options]
   main.py consider_equity [options]
@@ -29,6 +30,7 @@ from agents.agent_consider_equity import Player as EquityPlayer
 from agents.agent_dqn import Player as DQNPlayer
 from agents.agent_keypress import Player as KeyPressAgent
 from agents.agent_random import Player as RandomPlayer
+from agents.agent_uto1 import Player as UtoPlayer
 from gym_env.env import PlayerShell
 from tools.helper import get_config
 from tools.helper import init_logger
@@ -55,6 +57,9 @@ def command_line_parser():
 
     if args['random']:
         runner.random_agents()
+
+    elif args['uto']:
+        runner.uto_plays()
 
     elif args['keypress']:
         runner.key_press_agents()
@@ -86,6 +91,30 @@ class Runner:
         self.env = None
         self.num_episodes = num_episodes
         self.log = logging.getLogger(__name__)
+
+    def uto_plays(self):
+        """Create an environment with 6 random players"""
+        env_name = 'neuron_poker-v0'
+        stack = 500
+        num_of_plrs = 6
+        self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
+        self.env.add_player(RandomPlayer())
+        self.env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=-.8))
+        self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
+        self.env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=-.3))
+        self.env.add_player(UtoPlayer(name='Uto1 1'))
+        self.env.add_player(UtoPlayer(name='Uto1 2'))
+
+        for _ in range(self.num_episodes):
+            self.env.reset()
+            self.winner_in_episodes.append(self.env.winner_ix)
+
+        league_table = pd.Series(self.winner_in_episodes).value_counts()
+        best_player = league_table.index[0]
+
+        print(league_table)
+        print(f"Best Player: {best_player}")
+
 
     def random_agents(self):
         """Create an environment with 6 random players"""

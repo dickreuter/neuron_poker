@@ -32,6 +32,10 @@ class CommunityData:
         self.big_blind = 0
         self.small_blind = 0
         self.legal_moves = [0 for action in Action]
+        self.dealer_position = 0
+        self.table_cards = []
+        self.game_stage = Stage.PREFLOP
+        self.min_call = 0
 
 
 class StageData:
@@ -52,12 +56,13 @@ class PlayerData:
 
     def __init__(self):
         """data"""
+        self.hand = []
         self.position = None
         self.equity_to_river_alive = 0
         self.equity_to_river_2plr = 0
         self.equity_to_river_3plr = 0
         self.stack = None
-
+        self.stack_amount = 0
 
 class Action(Enum):
     """Allowed actions"""
@@ -249,8 +254,12 @@ class HoldemTable(Env):
         self.community_data.small_blind = self.small_blind
         self.community_data.big_blind = self.big_blind
         self.community_data.stage[np.minimum(self.stage.value, 3)] = 1
+        self.community_data.game_stage = self.stage
         self.community_data.legal_moves = [action in self.legal_moves for action in Action]
-        # self.cummunity_data.active_players
+        self.community_data.dealer_position = self.player_cycle.dealer_idx
+        self.community_data.active_players = self.player_cycle.alive
+        self.community_data.table_cards = self.table_cards
+        self.community_data.min_call = self.min_call
 
         self.player_data = PlayerData()
         self.player_data.stack = [player.stack / (self.big_blind * 100) for player in self.players]
@@ -262,6 +271,8 @@ class HoldemTable(Env):
         self.current_player.equity_alive = get_equity(self.current_player.cards, self.table_cards,
                                                       sum(self.player_cycle.alive))
         self.player_data.equity_to_river_alive = self.current_player.equity_alive
+        self.player_data.hand = self.current_player.cards
+        self.player_data.stack_amount = self.current_player.stack
 
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))
         arr2 = np.array(list(flatten(self.community_data.__dict__.values())))
