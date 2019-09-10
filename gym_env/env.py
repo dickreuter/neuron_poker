@@ -63,6 +63,7 @@ class PlayerData:
         self.equity_to_river_3plr = 0
         self.stack = None
         self.stack_amount = 0
+        self.first_decision = False
 
 class Action(Enum):
     """Allowed actions"""
@@ -273,6 +274,7 @@ class HoldemTable(Env):
         self.player_data.equity_to_river_alive = self.current_player.equity_alive
         self.player_data.hand = self.current_player.cards
         self.player_data.stack_amount = self.current_player.stack
+        self.player_data.first_decision = self.current_player.last_action_in_stage == ''
 
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))
         arr2 = np.array(list(flatten(self.community_data.__dict__.values())))

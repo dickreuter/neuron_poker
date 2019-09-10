@@ -21,11 +21,11 @@ options:
 
 import logging
 
+import gym
 import numpy as np
 import pandas as pd
 from docopt import docopt
 
-import gym
 from agents.agent_consider_equity import Player as EquityPlayer
 from agents.agent_dqn import Player as DQNPlayer
 from agents.agent_keypress import Player as KeyPressAgent
@@ -103,7 +103,8 @@ class Runner:
         self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
         self.env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=-.3))
         self.env.add_player(UtoPlayer(name='Uto1 1'))
-        self.env.add_player(UtoPlayer(name='Uto1 2'))
+        self.env.add_player(
+            UtoPlayer(name='Uto1 2', min_call_equity=0.46, min_bet_equity=0.56, min_call_equity_allin=0.7))
 
         for _ in range(self.num_episodes):
             self.env.reset()
