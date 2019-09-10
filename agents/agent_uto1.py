@@ -78,10 +78,9 @@ class Player:
             elif equity_alive > self.min_bet_equity - increment1 and Action.RAISE_HALF_POT in action_space:
                 action = Action.RAISE_HALF_POT
 
-            elif equity_alive > self.min_call_equity and Action.CALL in action_space \
-                    and ((equity_alive > self.min_call_equity_allin and min_call >= stack) or (
-                    min_call < stack / 2 or min_call <= big_blind * 4)):
-                action = Action.CALL
+            elif equity_alive > self.min_call_equity and Action.CALL in action_space:
+                if (equity_alive > self.min_call_equity_allin and min_call >= stack) or (min_call < stack / 2 or min_call <= big_blind * 4):
+                    action = Action.CALL
 
             elif Action.CHECK in action_space:
                 action = Action.CHECK
@@ -110,11 +109,9 @@ class Player:
             elif equity_alive > self.min_bet_equity - increment1 and Action.RAISE_HALF_POT in action_space:
                 action = Action.RAISE_HALF_POT
 
-            elif equity_alive > self.min_call_equity and Action.CALL in action_space \
-                    and (rank <= L.LookupTable.MAX_PAIR) \
-                    and ((equity_alive > self.min_call_equity_allin and min_call >= stack) or (
-                    min_call < stack / 2 or min_call <= big_blind * 4)):
-                action = Action.CALL
+            elif equity_alive > self.min_call_equity and Action.CALL and rank <= L.LookupTable.MAX_PAIR in action_space:
+                if ((equity_alive > self.min_call_equity_allin and min_call >= stack) or min_call < stack / 2 or min_call <= big_blind * 4):
+                    action = Action.CALL
 
             elif Action.CHECK in action_space:
                 action = Action.CHECK
@@ -125,12 +122,11 @@ class Player:
         return action
 
     def get_rank_pos_modifier(self, my_position, dealer_position, rank):
-        # it is always easier to play as a dealer...
+        """it is always easier to play as a dealer... and more difficult to be the first one"""
         if my_position == dealer_position:
             rank *= 1 - (2 * self.position_modifier)
         elif dealer_position - 1 % 6 == my_position:
             rank *= 1 - (1 * self.position_modifier)
-        # and more difficult to be the first one
         elif dealer_position + 1 % 6 == my_position:
             rank *= 1 + (2 * self.position_modifier)
         elif dealer_position + 2 % 6 == my_position:
@@ -138,12 +134,11 @@ class Player:
         return rank
 
     def get_equity_pos_modifier(self, my_position, dealer_position, equity_alive):
-        # it is always easier to play as a dealer...
+        """it is always easier to play as a dealer... and more difficult to be the first one"""
         if my_position == dealer_position:
             equity_alive *= 1 + (2 * self.position_modifier)
         elif dealer_position - 1 % 6 == my_position:
             equity_alive *= 1 + (1 * self.position_modifier)
-        # and more difficult to be the first one
         elif dealer_position + 1 % 6 == my_position:
             equity_alive *= 1 - (2 * self.position_modifier)
         elif dealer_position + 2 % 6 == my_position:
@@ -152,6 +147,7 @@ class Player:
 
     @staticmethod
     def get_deuces_rank(info):
+        """deuces rank"""
         evaluator = Ev()
         if info['community_data']['game_stage'].value == 1:
             table_cards = [Evcard.new(info['community_data']['table_cards'][0]),
