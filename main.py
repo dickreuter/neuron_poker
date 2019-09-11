@@ -99,9 +99,9 @@ class Runner:
         num_of_plrs = 6
         self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
         self.env.add_player(RandomPlayer())
-        self.env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=-.8))
-        self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
-        self.env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=-.3))
+        self.env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=.4))
+        self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=.5))
+        self.env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=.6))
         self.env.add_player(UtoPlayer(name='Uto1 1'))
         self.env.add_player(
             UtoPlayer(name='Uto1 2', min_call_equity=0.46, min_bet_equity=0.56, min_call_equity_allin=0.7))

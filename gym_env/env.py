@@ -9,6 +9,7 @@ from gym import Env
 from gym.spaces import Discrete
 
 from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
+from tools.deuces.deuces import Card as Evcard, Evaluator as Ev
 from tools.hand_evaluator import get_winner
 from tools.helper import flatten
 from tools.montecarlo_python import get_equity
@@ -33,8 +34,7 @@ class CommunityData:
         self.small_blind = 0
         self.legal_moves = [0 for action in Action]
         self.dealer_position = 0
-        self.table_cards = []
-        self.game_stage = Stage.PREFLOP
+        self.game_stage = Stage.PREFLOP.value
         self.min_call = 0
 
 
@@ -56,14 +56,14 @@ class PlayerData:
 
     def __init__(self):
         """data"""
-        self.hand = []
+        self.hand_rank = 0
         self.position = None
         self.equity_to_river_alive = 0
         self.equity_to_river_2plr = 0
         self.equity_to_river_3plr = 0
         self.stack = None
         self.stack_amount = 0
-        self.first_decision = False
+        self.first_decision = 0
 
 class Action(Enum):
     """Allowed actions"""
@@ -255,11 +255,10 @@ class HoldemTable(Env):
         self.community_data.small_blind = self.small_blind
         self.community_data.big_blind = self.big_blind
         self.community_data.stage[np.minimum(self.stage.value, 3)] = 1
-        self.community_data.game_stage = self.stage
+        self.community_data.game_stage = self.stage.value
         self.community_data.legal_moves = [action in self.legal_moves for action in Action]
         self.community_data.dealer_position = self.player_cycle.dealer_idx
         self.community_data.active_players = self.player_cycle.alive
-        self.community_data.table_cards = self.table_cards
         self.community_data.min_call = self.min_call
 
         self.player_data = PlayerData()
@@ -272,9 +271,9 @@ class HoldemTable(Env):
         self.current_player.equity_alive = get_equity(self.current_player.cards, self.table_cards,
                                                       sum(self.player_cycle.alive))
         self.player_data.equity_to_river_alive = self.current_player.equity_alive
-        self.player_data.hand = self.current_player.cards
         self.player_data.stack_amount = self.current_player.stack
-        self.player_data.first_decision = self.current_player.last_action_in_stage == ''
+        self.player_data.first_decision = (1 if self.current_player.last_action_in_stage == '' else 0)
+        self.player_data.hand_rank = self.get_rank(self.stage, self.current_player.cards, self.table_cards)
 
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))
         arr2 = np.array(list(flatten(self.community_data.__dict__.values())))
@@ -409,6 +408,28 @@ class HoldemTable(Env):
             f"Seat {self.current_player.seat} ({self.current_player.name}): {action} - Remaining stack: {self.current_player.stack}, "
             f"Round pot: {self.current_round_pot}, Community pot: {self.community_pot}, "
             f"player pot: {self.player_pots[self.current_player.seat]}")
+
+    def get_rank(self, stage, cards, table_cards):
+        if stage == Stage.PREFLOP or stage.value > Stage.RIVER.value:
+            return 0
+        evaluator = Ev()
+        if stage.value == 1:
+            table = [Evcard.new(table_cards[0]),
+                           Evcard.new(table_cards[1]),
+                           Evcard.new(table_cards[2])]
+        elif stage.value == 2:
+            table = [Evcard.new(table_cards[0]),
+                           Evcard.new(table_cards[1]),
+                           Evcard.new(table_cards[2]),
+                           Evcard.new(table_cards[3])]
+        else:
+            table = [Evcard.new(table_cards[0]),
+                           Evcard.new(table_cards[1]),
+                           Evcard.new(table_cards[2]),
+                           Evcard.new(table_cards[3]),
+                           Evcard.new(table_cards[4])]
+        hand_cards = [Evcard.new(cards[0]), Evcard.new(cards[1])]
+        return evaluator.evaluate(hand_cards, table)
 
     def _start_new_hand(self):
         """Deal new cards to players and reset table states."""

@@ -3,7 +3,7 @@ import random
 
 from gym_env.env import Action
 from gym_env.env import Stage
-from tools.deuces.deuces import Card as Evcard, Evaluator as Ev, lookup as L
+from tools.deuces.deuces import lookup as lup
 
 autoplay = True  # play automatically if played against keras-rl
 
@@ -39,11 +39,8 @@ class Player:
         min_call = info['community_data']['min_call']
         big_blind = info['community_data']['big_blind']
         stage = info['community_data']['game_stage']
-        first_decision = info['player_data']['first_decision']
-        rank = 0
-
-        if stage != Stage.PREFLOP:
-            rank = self.get_deuces_rank(info)
+        first_decision = True if info['player_data']['first_decision'] else False
+        rank = info['player_data']['hand_rank']
 
         rank = self.get_rank_pos_modifier(my_position, dealer_position, rank)
         equity_alive = self.get_equity_pos_modifier(my_position, dealer_position, equity_alive)
@@ -60,7 +57,7 @@ class Player:
             if self.vip_warning:
                 equity_alive *= 1 - (3 * self.position_modifier)
 
-        if stage == Stage.PREFLOP:
+        if stage == Stage.PREFLOP.value:
             if equity_alive > self.min_bet_equity + increment2 \
                     and (equity_alive >= 0.7754) \
                     and Action.ALL_IN in action_space:
@@ -109,8 +106,9 @@ class Player:
             elif equity_alive > self.min_bet_equity - increment1 and Action.RAISE_HALF_POT in action_space:
                 action = Action.RAISE_HALF_POT
 
-            elif equity_alive > self.min_call_equity and Action.CALL and rank <= L.LookupTable.MAX_PAIR in action_space:
-                if ((equity_alive > self.min_call_equity_allin and min_call >= stack) or min_call < stack / 2 or min_call <= big_blind * 4):
+            elif equity_alive > self.min_call_equity and Action.CALL and rank <= lup.LookupTable.MAX_PAIR in action_space:
+                if (equity_alive > self.min_call_equity_allin and min_call >= stack) \
+                        or min_call < stack / 2 or min_call <= big_blind * 4:
                     action = Action.CALL
 
             elif Action.CHECK in action_space:
@@ -144,25 +142,3 @@ class Player:
         elif dealer_position + 2 % 6 == my_position:
             equity_alive *= 1 - (1 * self.position_modifier)
         return equity_alive
-
-    @staticmethod
-    def get_deuces_rank(info):
-        """deuces rank"""
-        evaluator = Ev()
-        if info['community_data']['game_stage'].value == 1:
-            table_cards = [Evcard.new(info['community_data']['table_cards'][0]),
-                           Evcard.new(info['community_data']['table_cards'][1]),
-                           Evcard.new(info['community_data']['table_cards'][2])]
-        elif info['community_data']['game_stage'].value == 2:
-            table_cards = [Evcard.new(info['community_data']['table_cards'][0]),
-                           Evcard.new(info['community_data']['table_cards'][1]),
-                           Evcard.new(info['community_data']['table_cards'][2]),
-                           Evcard.new(info['community_data']['table_cards'][3])]
-        else:
-            table_cards = [Evcard.new(info['community_data']['table_cards'][0]),
-                           Evcard.new(info['community_data']['table_cards'][1]),
-                           Evcard.new(info['community_data']['table_cards'][2]),
-                           Evcard.new(info['community_data']['table_cards'][3]),
-                           Evcard.new(info['community_data']['table_cards'][4])]
-        hand_cards = [Evcard.new(info['player_data']['hand'][0]), Evcard.new(info['player_data']['hand'][1])]
-        return evaluator.evaluate(hand_cards, table_cards)
