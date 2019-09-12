@@ -1,3 +1,4 @@
+# pylint: skip-file
 """
 Deuces: A pure Python poker hand evaluation library
 """

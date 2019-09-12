@@ -1,3 +1,4 @@
+# pylint: skip-file
 class Card ():
     """
     Static class that handles cards. We represent cards as 32-bit integers, so 

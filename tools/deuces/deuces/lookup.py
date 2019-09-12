@@ -1,5 +1,8 @@
+# pylint: skip-file
 import itertools
+
 from tools.deuces.deuces.card import Card
+
 
 class LookupTable(object):
     """

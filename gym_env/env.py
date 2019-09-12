@@ -409,25 +409,20 @@ class HoldemTable(Env):
             f"Round pot: {self.current_round_pot}, Community pot: {self.community_pot}, "
             f"player pot: {self.player_pots[self.current_player.seat]}")
 
-    def get_rank(self, stage, cards, table_cards):
+    @staticmethod
+    def get_rank(stage, cards, table_cards):
+        """returns deuces rank"""
         if stage == Stage.PREFLOP or stage.value > Stage.RIVER.value:
             return 0
         evaluator = Ev()
         if stage.value == 1:
-            table = [Evcard.new(table_cards[0]),
-                           Evcard.new(table_cards[1]),
-                           Evcard.new(table_cards[2])]
+            table = [Evcard.new(table_cards[0]), Evcard.new(table_cards[1]), Evcard.new(table_cards[2])]
         elif stage.value == 2:
-            table = [Evcard.new(table_cards[0]),
-                           Evcard.new(table_cards[1]),
-                           Evcard.new(table_cards[2]),
-                           Evcard.new(table_cards[3])]
+            table = [Evcard.new(table_cards[0]), Evcard.new(table_cards[1]), Evcard.new(table_cards[2]),
+                     Evcard.new(table_cards[3])]
         else:
-            table = [Evcard.new(table_cards[0]),
-                           Evcard.new(table_cards[1]),
-                           Evcard.new(table_cards[2]),
-                           Evcard.new(table_cards[3]),
-                           Evcard.new(table_cards[4])]
+            table = [Evcard.new(table_cards[0]), Evcard.new(table_cards[1]), Evcard.new(table_cards[2]),
+                     Evcard.new(table_cards[3]), Evcard.new(table_cards[4])]
         hand_cards = [Evcard.new(cards[0]), Evcard.new(cards[1])]
         return evaluator.evaluate(hand_cards, table)
 

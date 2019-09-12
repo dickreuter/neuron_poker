@@ -1,6 +1,9 @@
+# pylint: skip-file
 import itertools
+
 from tools.deuces.deuces.card import Card
 from tools.deuces.deuces.lookup import LookupTable
+
 
 class Evaluator(object):
     """

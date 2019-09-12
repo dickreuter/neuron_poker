@@ -1,5 +1,8 @@
+# pylint: skip-file
 from random import shuffle
+
 from tools.deuces.deuces.card import Card
+
 
 class Deck:
     """

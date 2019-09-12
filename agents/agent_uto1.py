@@ -39,7 +39,7 @@ class Player:
         min_call = info['community_data']['min_call']
         big_blind = info['community_data']['big_blind']
         stage = info['community_data']['game_stage']
-        first_decision = True if info['player_data']['first_decision'] else False
+        first_decision = bool(info['player_data']['first_decision'] == 1)
         rank = info['player_data']['hand_rank']
 
         rank = self.get_rank_pos_modifier(my_position, dealer_position, rank)
