@@ -8,6 +8,7 @@ import pandas as pd
 from gym import Env
 from gym.spaces import Discrete
 
+import tools.deuces.deuces.lookup as EvLookup
 from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
 from tools.deuces.deuces import Card as Evcard, Evaluator as Ev
 from tools.hand_evaluator import get_winner
@@ -259,7 +260,7 @@ class HoldemTable(Env):
         self.community_data.legal_moves = [action in self.legal_moves for action in Action]
         self.community_data.dealer_position = self.player_cycle.dealer_idx
         self.community_data.active_players = self.player_cycle.alive
-        self.community_data.min_call = self.min_call
+        self.community_data.min_call = self.min_call / (self.big_blind * 10000)
 
         self.player_data = PlayerData()
         self.player_data.stack = [player.stack / (self.big_blind * 100) for player in self.players]
@@ -424,7 +425,7 @@ class HoldemTable(Env):
             table = [Evcard.new(table_cards[0]), Evcard.new(table_cards[1]), Evcard.new(table_cards[2]),
                      Evcard.new(table_cards[3]), Evcard.new(table_cards[4])]
         hand_cards = [Evcard.new(cards[0]), Evcard.new(cards[1])]
-        return evaluator.evaluate(hand_cards, table)
+        return evaluator.evaluate(hand_cards, table)/EvLookup.LookupTable.MAX_HIGH_CARD
 
     def _start_new_hand(self):
         """Deal new cards to players and reset table states."""

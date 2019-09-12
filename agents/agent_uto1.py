@@ -1,9 +1,9 @@
 """UTO1 player"""
 import random
 
+import tools.deuces.deuces.lookup as EvLookup
 from gym_env.env import Action
 from gym_env.env import Stage
-from tools.deuces.deuces import lookup as lup
 
 autoplay = True  # play automatically if played against keras-rl
 
@@ -36,11 +36,11 @@ class Player:
         stack = info['player_data']['stack_amount'] #number
         dealer_position = info['community_data']['dealer_position']
         # active_players = info['community_data']['active_players']
-        min_call = info['community_data']['min_call']
+        min_call = info['community_data']['min_call'] * (info['community_data']['big_blind'] * 10000)
         big_blind = info['community_data']['big_blind']
         stage = info['community_data']['game_stage']
         first_decision = bool(info['player_data']['first_decision'] == 1)
-        rank = info['player_data']['hand_rank']
+        rank = info['player_data']['hand_rank'] * EvLookup.LookupTable.MAX_HIGH_CARD
 
         rank = self.get_rank_pos_modifier(my_position, dealer_position, rank)
         equity_alive = self.get_equity_pos_modifier(my_position, dealer_position, equity_alive)
@@ -106,7 +106,7 @@ class Player:
             elif equity_alive > self.min_bet_equity - increment1 and Action.RAISE_HALF_POT in action_space:
                 action = Action.RAISE_HALF_POT
 
-            elif equity_alive > self.min_call_equity and Action.CALL and rank <= lup.LookupTable.MAX_PAIR in action_space:
+            elif equity_alive > self.min_call_equity and Action.CALL and rank <= EvLookup.LookupTable.MAX_PAIR in action_space:
                 if (equity_alive > self.min_call_equity_allin and min_call >= stack) \
                         or min_call < stack / 2 or min_call <= big_blind * 4:
                     action = Action.CALL
