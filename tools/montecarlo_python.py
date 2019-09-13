@@ -185,7 +185,7 @@ class MonteCarlo(object):
     def distribute_cards_to_table(self, Deck, table_card_list):
         remaningRandoms = 5 - len(table_card_list)
         for n in range(0, remaningRandoms):
-            table_card_list.append(Deck.pop(np.random.randint(0, len(Deck) - 1)))
+            table_card_list.append(Deck.pop(np.random.randint(0, len(Deck))))
         return table_card_list
 
     def run_montecarlo(self, original_player_card_list, original_table_card_list, player_amount, ui, maxRuns,
