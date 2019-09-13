@@ -8,8 +8,8 @@ import pandas as pd
 from gym import Env
 from gym.spaces import Discrete
 
-import tools.deuces.deuces.lookup as EvLookup
 from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
+import tools.deuces.deuces.lookup as EvLookup
 from tools.deuces.deuces import Card as Evcard, Evaluator as Ev
 from tools.hand_evaluator import get_winner
 from tools.helper import flatten
