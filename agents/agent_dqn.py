@@ -8,6 +8,9 @@ import numpy as np
 from gym_env.env import Action
 from keras.callbacks import TensorBoard
 from rl.policy import BoltzmannQPolicy
+import tensorflow as tf
+import json
+from keras.models import model_from_json
 
 autplay = True  # play automatically if played against keras-rl
 
@@ -26,7 +29,7 @@ log = logging.getLogger(__name__)
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, name='DQN', load_model=None):
+    def __init__(self, name='DQN', load_model=None, env=None):
         """Initiaization of an agent"""
         self.equity_alive = 0
         self.actions = []
@@ -36,7 +39,7 @@ class Player:
         self.autoplay = True
 
         self.dqn = None
-        self.env = None
+        self.env = env
 
         if load_model:
             self.load(load_model)
@@ -44,23 +47,23 @@ class Player:
     def initiate_agent(self, env):
         """initiate a deep Q agent"""
         from keras import Sequential
-        from keras.optimizers import Adam
         from keras.layers import Dense, Dropout
         from rl.memory import SequentialMemory
         from rl.agents import DQNAgent
 
+        tf.compat.v1.disable_eager_execution()
         self.env = env
 
         nb_actions = self.env.action_space.n
 
-        model = Sequential()
-        model.add(Dense(512, activation='relu', input_shape=env.observation_space))
-        model.add(Dropout(0.2))
-        model.add(Dense(512, activation='relu'))
-        model.add(Dropout(0.2))
-        model.add(Dense(512, activation='relu'))
-        model.add(Dropout(0.2))
-        model.add(Dense(nb_actions, activation='linear'))
+        self.model = Sequential()
+        self.model.add(Dense(512, activation='relu', input_shape=env.observation_space))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(512, activation='relu'))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(512, activation='relu'))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(nb_actions, activation='linear'))
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
@@ -69,7 +72,7 @@ class Player:
         from rl.core import Processor
 
         class CustomProcessor(Processor):
-            """he agent and the environment"""
+            """The agent and the environment"""
 
             def process_state_batch(self, batch):
                 """
@@ -86,11 +89,11 @@ class Player:
 
         nb_actions = env.action_space.n
 
-        self.dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
+        self.dqn = DQNAgent(model=self.model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
                             batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
-        self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
+        self.dqn.compile(tf.optimizers.Adam(lr=1e-3), metrics=['mae'])
 
     def start_step_policy(self, observation):
         """Custom policy for random decisions for warm up."""
@@ -109,6 +112,11 @@ class Player:
         self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=nb_steps, visualize=False, verbose=2,
                      start_step_policy=self.start_step_policy, callbacks=[tensorboard])
 
+        # Save the architecture
+        dqn_json = self.model.to_json()
+        with open("dqn_in_json.json", "w") as json_file:
+            json.dump(dqn_json, json_file)
+
         # After training is done, we save the final weights.
         self.dqn.save_weights('dqn_{}_weights.h5'.format(env_name), overwrite=True)
 
@@ -117,7 +125,49 @@ class Player:
 
     def load(self, env_name):
         """Load a model"""
-        self.dqn.load_weights('dqn_{}_weights.h5'.format(env_name))
+
+        # Load the architecture
+        with open('dqn_in_json.json','r') as f:
+            dqn_json = json.load(f)
+
+        self.model = model_from_json(dqn_json)        
+        self.model.load_weights('dqn_{}_weights.h5'.format(env_name))
+
+    def play(self, nb_episodes=5, render=False):
+        from keras import Sequential
+        from keras.layers import Dense, Dropout
+        from rl.memory import SequentialMemory
+        from rl.agents import DQNAgent
+        
+        memory = SequentialMemory(limit=memory_limit, window_length=window_length)
+        policy = TrumpPolicy()
+        from rl.core import Processor
+
+        class CustomProcessor(Processor):
+            """The agent and the environment"""
+
+            def process_state_batch(self, batch):
+                """
+                Given a state batch, I want to remove the second dimension, because it's
+                useless and prevents me from feeding the tensor into my CNN
+                """
+                return np.squeeze(batch, axis=1)
+
+            def process_info(self, info):
+                processed_info = info['player_data']
+                if 'stack' in processed_info:
+                    processed_info = {'x': 1}
+                return processed_info
+
+        nb_actions = self.env.action_space.n
+
+        self.dqn = DQNAgent(model=self.model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
+                            target_model_update=1e-2, policy=policy,
+                            processor=CustomProcessor(),
+                            batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
+        self.dqn.compile(tf.optimizers.Adam(lr=1e-3), metrics=['mae'])
+
+        self.dqn.test(self.env, nb_episodes=nb_episodes, visualize=render)
 
     def action(self, action_space, observation, info):  # pylint: disable=no-self-use
         """Mandatory method that calculates the move based on the observation array and the action space."""
