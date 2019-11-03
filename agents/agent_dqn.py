@@ -11,6 +11,11 @@ from rl.policy import BoltzmannQPolicy
 import tensorflow as tf
 import json
 from keras.models import model_from_json
+from keras import Sequential
+from keras.layers import Dense, Dropout
+from rl.memory import SequentialMemory
+from rl.agents import DQNAgent
+from rl.core import Processor
 
 autplay = True  # play automatically if played against keras-rl
 
@@ -39,6 +44,7 @@ class Player:
         self.autoplay = True
 
         self.dqn = None
+        self.model = None
         self.env = env
 
         if load_model:
@@ -46,11 +52,6 @@ class Player:
 
     def initiate_agent(self, env):
         """initiate a deep Q agent"""
-        from keras import Sequential
-        from keras.layers import Dense, Dropout
-        from rl.memory import SequentialMemory
-        from rl.agents import DQNAgent
-
         tf.compat.v1.disable_eager_execution()
         self.env = env
 
@@ -69,7 +70,6 @@ class Player:
         # even the metrics!
         memory = SequentialMemory(limit=memory_limit, window_length=window_length)
         policy = TrumpPolicy()
-        from rl.core import Processor
 
         class CustomProcessor(Processor):
             """The agent and the environment"""
@@ -127,21 +127,16 @@ class Player:
         """Load a model"""
 
         # Load the architecture
-        with open('dqn_in_json.json','r') as f:
-            dqn_json = json.load(f)
+        with open('dqn_in_json.json','r') as architecture_json:
+            dqn_json = json.load(architecture_json)
 
-        self.model = model_from_json(dqn_json)        
+        self.model = model_from_json(dqn_json)
         self.model.load_weights('dqn_{}_weights.h5'.format(env_name))
 
     def play(self, nb_episodes=5, render=False):
-        from keras import Sequential
-        from keras.layers import Dense, Dropout
-        from rl.memory import SequentialMemory
-        from rl.agents import DQNAgent
-        
+        """Let the agent play"""
         memory = SequentialMemory(limit=memory_limit, window_length=window_length)
         policy = TrumpPolicy()
-        from rl.core import Processor
 
         class CustomProcessor(Processor):
             """The agent and the environment"""
