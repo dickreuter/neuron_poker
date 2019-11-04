@@ -790,13 +790,13 @@ class PlayerCycle:
         while True:
             if self.can_still_make_moves_in_this_hand[self.idx]:
                 break
-            else:
-                self.idx += 1
-                self.counter += 1
-                self.idx %= len(self.lst)
-                if self.max_steps_total and self.counter >= self.max_steps_total:
-                    log.debug("Max steps total has been reached after jumping some folders")
-                    return False
+            
+            self.idx += 1
+            self.counter += 1
+            self.idx %= len(self.lst)
+            if self.max_steps_total and self.counter >= self.max_steps_total:
+                log.debug("Max steps total has been reached after jumping some folders")
+                return False
 
         self.update_alive()
         return self.lst[self.idx]
@@ -809,9 +809,9 @@ class PlayerCycle:
         while True:
             if self.can_still_make_moves_in_this_hand[self.dealer_idx]:
                 break
-            else:
-                self.dealer_idx += 1
-                self.dealer_idx %= len(self.lst)
+            
+            self.dealer_idx += 1
+            self.dealer_idx %= len(self.lst)
 
         return self.lst[self.dealer_idx]
 

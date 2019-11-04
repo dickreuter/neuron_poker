@@ -6,13 +6,16 @@ import time
 import numpy as np
 
 from gym_env.env import Action
-from keras.callbacks import TensorBoard
-from rl.policy import BoltzmannQPolicy
+
 import tensorflow as tf
 import json
-from keras.models import model_from_json
+
 from keras import Sequential
+from keras.models import model_from_json
+from keras.callbacks import TensorBoard
 from keras.layers import Dense, Dropout
+
+from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 from rl.agents import DQNAgent
 from rl.core import Processor
@@ -127,7 +130,7 @@ class Player:
         """Load a model"""
 
         # Load the architecture
-        with open('dqn_in_json.json','r') as architecture_json:
+        with open('dqn_in_json.json', 'r') as architecture_json:
             dqn_json = json.load(architecture_json)
 
         self.model = model_from_json(dqn_json)
