@@ -3,3 +3,5 @@
 .idea/
 neuron_poker.iml
 log/
+Graph/
+*.pyc
