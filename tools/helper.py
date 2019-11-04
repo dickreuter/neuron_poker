@@ -224,7 +224,7 @@ def multi_threading(pool_fn, pool_args, disable_multiprocessing=False, dataframe
         res (list): Result of multiprocessing. Len of results will match len of the list of the pool_args
 
     """
-    
+
     parallel, cores = get_multiprocessing_config()
     log.debug("Start with parallel={} and cores={}, queue size={}".format(parallel, cores, len(pool_args)))
     if parallel and not disable_multiprocessing:
