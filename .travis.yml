@@ -13,15 +13,13 @@ install:
   - bash miniconda.sh -b -p "$HOME"/miniconda
   - source "$HOME"/miniconda/etc/profile.d/conda.sh
   - conda config --set always_yes yes --set changeps1 no --set auto_update_conda false
-  - pip install requirements.txt
   - export LANG=en_US.UTF-8
   - export COVERAGE_DIR=":$HOME/htmlcov"
-  - printenv | sort
-
-install:
   - pip install -r requirements.txt
+  - printenv | sort
+  -
 # command to run tests
-script: pytest --log-cli-level=warning
+script: pytest
 
 after_success:
   - codecov
