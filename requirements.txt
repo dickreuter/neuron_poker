@@ -9,4 +9,4 @@ pyglet
 keras
 keras-rl
 docopt
-tensorflow
+tensorflow==1.14

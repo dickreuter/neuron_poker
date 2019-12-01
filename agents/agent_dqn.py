@@ -96,7 +96,7 @@ class Player:
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
                             batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
-        self.dqn.compile(tf.optimizers.Adam(lr=1e-3), metrics=['mae'])
+        self.dqn.compile(tf.keras.optimizers.Adam(lr=1e-3), metrics=['mae'])
 
     def start_step_policy(self, observation):
         """Custom policy for random decisions for warm up."""
