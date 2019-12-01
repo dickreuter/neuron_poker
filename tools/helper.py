@@ -11,7 +11,7 @@ import os
 import pickle
 import sys
 import traceback
-from collections import Iterable
+from collections import Iterable  # pylint: disable=no-name-in-module
 from configparser import ConfigParser, ExtendedInterpolation
 from logging import handlers
 
