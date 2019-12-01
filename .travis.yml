@@ -19,7 +19,7 @@ install:
   - printenv | sort
   -
 # command to run tests
-script: pytest
+script: pytest --log-cli-level=ERROR
 
 after_success:
   - codecov

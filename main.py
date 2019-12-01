@@ -165,12 +165,11 @@ class Runner:
                 betting[i] = np.mean([betting[i], betting[best_player]])
                 self.log.info(f"New betting for player {i} is {betting[i]}")
 
-    @staticmethod
-    def dqn_train():
+    def dqn_train(self):
         """Implementation of kreras-rl deep q learing."""
         env_name = 'neuron_poker-v0'
         stack = 100
-        env = gym.make(env_name, num_of_players=2, initial_stacks=stack, funds_plot=False)
+        env = gym.make(env_name, num_of_players=2, initial_stacks=stack, funds_plot=False, render=self.render)
 
         np.random.seed(123)
         env.seed(123)
