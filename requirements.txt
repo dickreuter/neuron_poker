@@ -10,3 +10,5 @@ keras
 keras-rl
 docopt
 tensorflow==1.14
+pybind11
+cppimport
