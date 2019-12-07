@@ -1,7 +1,3 @@
-<%
-setup_pybind11(cfg)
-%>
-
 #include "Montecarlo.h"
 
 #include <array>
@@ -15,27 +11,6 @@ setup_pybind11(cfg)
 #include <random>
 #include <iterator>
 
-#include <pybind11/pybind11.h>
-
-#include <pybind11/stl.h>
-#include <pybind11/complex.h>,
-#include <pybind11/functional.h>
-#include <pybind11/chrono.h>
-
-
-namespace py = pybind11;
-using namespace pybind11::literals;
-
-
-PYBIND11_MODULE(Montecarlo, m) {
-	m.def("montecarlo", &montecarlo);
-}
-
-
-namespace
-{
-	constexpr auto x = std::array<int, 4>{2, 2, 2, 1};
-}
 
 bool eval_best_hand(const std::vector<CardsWithTableCombined>& all_cards_with_table_combined)
 // returns true if first player has best hand
@@ -265,8 +240,8 @@ std::tuple< std::vector<int>, std::vector<int>, std::string> calc_score(const Ca
 
 double montecarlo(const std::set<std::string>& my_cards, std::set<std::string> cards_on_table, const int number_of_players, const int iterations) {
 
-    if (cards_on_table.size() < 3)
-        std::set<std::string> cards_on_table;
+	if (cards_on_table.size() < 3)
+		cards_on_table.clear();
 	int wins = 0;
 
 	for (int i = 0; i < iterations; i++)

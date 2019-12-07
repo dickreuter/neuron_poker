@@ -3,13 +3,13 @@
 import cppimport
 import pytest
 
-calculator = cppimport.imp("tools.Montecarlo")
+calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
 
 
 def _runner(my_cards, cards_on_table, players, expected_result):
     """Montecarlo test"""
-    # if len(cards_on_table) < 3:
-    #     cards_on_table = {'null'}
+    if len(cards_on_table) < 3:
+        cards_on_table = {'null'}
     equity = calculator.montecarlo(my_cards, cards_on_table, players, 5000)
     assert equity == pytest.approx(expected_result, abs=1)
 
