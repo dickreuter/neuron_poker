@@ -398,10 +398,10 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
     return m
 
 
-def get_equity(player_cards, table_cards, players):
+def get_equity(player_cards, table_cards, players, runs):
     """Get equity from a monteacrlo run"""
     simulation = MonteCarlo()
-    simulation.run_montecarlo([player_cards], table_cards, players, 1, maxRuns=1000,
+    simulation.run_montecarlo([player_cards], table_cards, players, 1, maxRuns=runs,
                               timeout=time.time() + 1, ghost_cards='', opponent_range=1)
     return simulation.equity
 

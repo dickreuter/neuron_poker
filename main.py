@@ -10,11 +10,12 @@ Usage:
   main.py dqn_play [options]
 
 options:
-  -h --help         Show this screen.
-  -r --render       render screen
-  --log             log file
-  --screenloglevel  log level on screen
-  --episodes=<>     number of episodes to play
+  -h --help                 Show this screen.
+  -r --render               render screen
+  -c --use_cpp_montecarlo   use cpp implementation of equity calculator. Requires cpp compiler but is 500x faster
+  --log                     log file
+  --screenloglevel          log level on screen
+  --episodes=<>             number of episodes to play
 
 """
 
@@ -51,7 +52,7 @@ def command_line_parser():
     log.info("Initializing program")
 
     num_episodes = 1 if not args['--episodes'] else int(args['--episodes'])
-    runner = Runner(render=args['--render'], num_episodes=num_episodes)
+    runner = Runner(render=args['--render'], num_episodes=num_episodes, use_cpp_montecarlo=args['--use_cpp_montecarlo'])
 
     if args['random']:
         runner.random_agents()
@@ -79,9 +80,10 @@ def command_line_parser():
 class Runner:
     """Orchestration"""
 
-    def __init__(self, render, num_episodes):
+    def __init__(self, render, num_episodes, use_cpp_montecarlo):
         """Initialize"""
         self.winner_in_episodes = []
+        self.use_cpp_montecarlo = use_cpp_montecarlo
         self.render = render
         self.env = None
         self.num_episodes = num_episodes
@@ -169,7 +171,7 @@ class Runner:
         """Implementation of kreras-rl deep q learing."""
         env_name = 'neuron_poker-v0'
         stack = 100
-        env = gym.make(env_name, num_of_players=2, initial_stacks=stack, funds_plot=False, render=self.render)
+        env = gym.make(env_name, num_of_players=2, initial_stacks=stack, funds_plot=False, render=self.render, use_cpp_montecarlo=self.use_cpp_montecarlo)
 
         np.random.seed(123)
         env.seed(123)

@@ -58,6 +58,7 @@ tools
    calculate equity. Not yet working correctly. Some tests are failing. Feel free to fix them.
 -  ``montecarlo_python.py``: relatively slow python based montecarlo for equity calculation. Supports
    preflight ranges for other players.
+-  ``montecarlo_cpp``: c++ implementation of equity calculator. Around 500x faster than python version
 
 tests
 ^^^^^

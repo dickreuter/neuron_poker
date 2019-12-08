@@ -1,6 +1,6 @@
 /*
 <%
-cfg['dependencies'] = ['Montecarlo.h', 'file2.h']
+cfg['dependencies'] = ['Montecarlo.h']
 setup_pybind11(cfg)
 %>
 */
@@ -19,6 +19,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 
-PYBIND11_MODULE(Montecarlo, m) {
+PYBIND11_MODULE(pymontecarlo, m) {
 	m.def("montecarlo", &montecarlo);
 }

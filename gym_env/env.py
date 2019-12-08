@@ -11,7 +11,6 @@ from gym.spaces import Discrete
 from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
 from tools.hand_evaluator import get_winner
 from tools.helper import flatten
-from tools.montecarlo_python import get_equity
 
 __author__ = 'Nicolas Dickreuter'
 log = logging.getLogger(__name__)
@@ -89,7 +88,7 @@ class HoldemTable(Env):
     """Pokergame environment"""
 
     def __init__(self, num_of_players=6, initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
-                 max_raising_rounds=2):
+                 max_raising_rounds=2, use_cpp_montecarlo=False):
         """
         The table needs to be initialized once at the beginning
 
@@ -103,6 +102,14 @@ class HoldemTable(Env):
             max_raising_rounds (int): max raises per round per player
 
         """
+        if use_cpp_montecarlo:
+            import cppimport
+            calculator = cppimport.imp("tools.montecarlo_cpp.Montecarlo")
+            get_equity = calculator.montecarlo
+        else:
+            from tools.montecarlo_python import get_equity
+        self.get_equity = get_equity
+        self.use_cpp_montecarlo = use_cpp_montecarlo
         self.num_of_players = num_of_players
         self.small_blind = small_blind
         self.big_blind = big_blind
@@ -259,8 +266,8 @@ class HoldemTable(Env):
             self.current_player = self.players[self.winner_ix]
 
         self.player_data.position = self.current_player.seat
-        self.current_player.equity_alive = get_equity(self.current_player.cards, self.table_cards,
-                                                      sum(self.player_cycle.alive))
+        self.current_player.equity_alive = self.get_equity(set(self.current_player.cards), set(self.table_cards),
+                                                      sum(self.player_cycle.alive), 1000)
         self.player_data.equity_to_river_alive = self.current_player.equity_alive
 
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))

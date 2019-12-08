@@ -11,6 +11,30 @@
 #include <random>
 #include <iterator>
 
+/*
+<%
+cfg['dependencies'] = ['Montecarlo.h']
+setup_pybind11(cfg)
+%>
+*/
+
+
+#include <pybind11/pybind11.h>
+
+#include <pybind11/stl.h>
+#include <pybind11/complex.h>,
+#include <pybind11/functional.h>
+#include <pybind11/chrono.h>
+
+
+
+namespace py = pybind11;
+using namespace pybind11::literals;
+
+
+PYBIND11_MODULE(Montecarlo, m) {
+	m.def("montecarlo", &montecarlo);
+}
 
 bool eval_best_hand(const std::vector<CardsWithTableCombined>& all_cards_with_table_combined)
 // returns true if first player has best hand
@@ -254,7 +278,7 @@ double montecarlo(const std::set<std::string>& my_cards, std::set<std::string> c
 		if (first_player_has_best_hand == true)
 			wins += 1;
 	}
-	double equity = (wins / (double)iterations) * 100.0;
+	double equity = (wins / (double)iterations);
 	std::cout << "Equity: " << equity << "%" << std::endl;
 	return equity;
 }
