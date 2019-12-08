@@ -17,7 +17,8 @@ install:
   - export COVERAGE_DIR=":$HOME/htmlcov"
   - pip install -r requirements.txt
   - printenv | sort
-  -
+  - conda install gcc_linux-64 gxx_linux-64 -c anaconda
+
 # command to run tests
 script: pytest --log-cli-level=ERROR
 

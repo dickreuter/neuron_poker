@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(montecarlo1)
 	std::set<std::string> my_cards = { "3H", "3S" };
 	std::set<std::string>    cards_on_table = { "8S", "4S", "QH", "8C", "4H" };
 	const int number_of_players = 2;
-	const int iterations = 10000;
+	const int iterations = 50000;
 	double equity = montecarlo(my_cards, cards_on_table, number_of_players, iterations);
 	double expected = 40.2;
 	int tolerance = 1;
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(montecarlo3)
 	std::set<std::string> my_cards = { "AS", "KS" };
 	std::set<std::string> cards_on_table = { };
 	const int number_of_players = 3;
-	const int iterations = 10000;
+	const int iterations = 50000;
 	double equity = montecarlo(my_cards, cards_on_table, number_of_players, iterations);
 
 	double expected = 51.8;
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(montecarlo4)
 	std::set<std::string> my_cards = { "AS", "KS" };
 	std::set<std::string> cards_on_table = { };
 	const int number_of_players = 2;
-	const int iterations = 10000;
+	const int iterations = 50000;
 	double equity = montecarlo(my_cards, cards_on_table, number_of_players, iterations);
 
 	double expected = 67.7;

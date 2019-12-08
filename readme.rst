@@ -16,6 +16,7 @@ Run:
    ``main.py random --render`` or
 -  To manually control the players:``main.py keypress --render``
 -  Example of genetic algorighm with self improvement: ``main.py equity_improvement --improvement_rounds=20 --episodes=10``
+-  In order to use the c++ version of the equity calculator, you will also need to install visual studio 2019 (or gcc over cygwin may work as well). To use it, use the -c option when running main.py.
 
 .. figure:: doc/table.png
    :alt:
@@ -30,8 +31,8 @@ At the end of an episode, the performance of the players can be observed via the
 Packages and modules:
 ~~~~~~~~~~~~~~~~~~~~~
 
-main.py: entry point and command line interpreter. Runs agents with the
-gym.
+main.py: entry point and command line interpreter. Runs agents with the gym. The docstring at the top of the file describes the command line options.
+They are interpreted by docopt.
 
 gym\_env
 ~~~~~~~~
@@ -46,6 +47,7 @@ Please add your model based agents here.
 -  ``agent_random.py``: an agent making random decisions
 -  ``agent_keypress.py``: an agent taking decision via keypress
 -  ``agent_consider_equity.py``: an agent considering equity information
+-  ``agent_dqn.py``: Deep Q learning agent, using keras-rl for deep reinforcement learning
 
 Note that the observation property is a dictionary that contains all the information about the players and table that can be used to make a decision.
 
@@ -202,6 +204,7 @@ be added and evaluated.
 To contribute do the following:
 
 - Get Pycharm and build the virtual python environment. Use can do: ``pip install -r requirements.txt``
+- If you want to use the 500x faster c++ based equity calculator, also install visual studio, but this is not necessary
 - Clone your fork to your local machine. You can do this directly from pycharm: VCS --> check out from version control --> git
 - Add as remote the original repository where you created the fork from and call it upstream (the connection to your fork should be called origin). This can be done with vcs --> git --> remotes
 - Create a new branch: click on master at the bottom right, and then click on 'new branch'
