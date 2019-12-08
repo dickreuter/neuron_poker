@@ -22,7 +22,7 @@ setup_pybind11(cfg)
 #include <pybind11/pybind11.h>
 
 #include <pybind11/stl.h>
-#include <pybind11/complex.h>,
+#include <pybind11/complex.h>
 #include <pybind11/functional.h>
 #include <pybind11/chrono.h>
 
@@ -279,7 +279,7 @@ double montecarlo(const std::set<std::string>& my_cards, std::set<std::string> c
 			wins += 1;
 	}
 	double equity = (wins / (double)iterations);
-	std::cout << "Equity: " << equity << "%" << std::endl;
+	// std::cout << "Equity: " << equity << std::endl;
 	return equity;
 }
 
