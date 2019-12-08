@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(montecarlo1)
 	double expected = 40.2;
 	int tolerance = 1;
 
-	BOOST_CHECK_CLOSE(equity, expected, tolerance);
+	BOOST_CHECK_CLOSE(equity*100, expected, tolerance);
 }
 
 
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(montecarlo3)
 	double expected = 51.8;
 	int tolerance = 1;
 
-	BOOST_CHECK_CLOSE(equity, expected, tolerance);
+	BOOST_CHECK_CLOSE(equity * 100, expected, tolerance);
 }
 
 
@@ -213,5 +213,5 @@ BOOST_AUTO_TEST_CASE(montecarlo4)
 	double expected = 67.7;
 	int tolerance = 1;
 
-	BOOST_CHECK_CLOSE(equity, expected, tolerance);
+	BOOST_CHECK_CLOSE(equity * 100, expected, tolerance);
 }
