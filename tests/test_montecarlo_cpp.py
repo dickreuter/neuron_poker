@@ -3,7 +3,7 @@
 import cppimport
 import pytest
 
-calculator = cppimport.imp("tools.montecarlo_cpp.Montecarlo")
+calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
 
 
 def _runner(my_cards, cards_on_table, players, expected_result):

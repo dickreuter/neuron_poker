@@ -104,7 +104,7 @@ class HoldemTable(Env):
         """
         if use_cpp_montecarlo:
             import cppimport
-            calculator = cppimport.imp("tools.montecarlo_cpp.Montecarlo")
+            calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
             get_equity = calculator.montecarlo
         else:
             from tools.montecarlo_python import get_equity
@@ -154,7 +154,7 @@ class HoldemTable(Env):
         self.funds_history = None
         self.array_everything = None
         self.legal_moves = None
-        self.illegal_move_reward = -self.initial_stacks
+        self.illegal_move_reward = -1
         self.action_space = Discrete(len(Action) - 2)
         self.first_action_for_hand = None
 

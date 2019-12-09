@@ -1,7 +1,7 @@
 /*
 <%
-cfg['dependencies'] = ['Montecarlo.h']
 setup_pybind11(cfg)
+cfg['sources'] = ['Montecarlo.cpp']
 %>
 */
 
