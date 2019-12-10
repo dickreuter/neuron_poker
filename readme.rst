@@ -10,13 +10,15 @@ Usage:
 
 Run:
 
--  Install Anaconda, I would also recommend to install pycharm.
-- ``pip install -r requirements.txt``
--  Run 6 random players playing against each other:
-   ``main.py random --render`` or
--  To manually control the players:``main.py keypress --render``
--  Example of genetic algorighm with self improvement: ``main.py equity_improvement --improvement_rounds=20 --episodes=10``
--  In order to use the c++ version of the equity calculator, you will also need to install visual studio 2019 (or gcc over cygwin may work as well). To use it, use the -c option when running main.py.
+- Install Anaconda, I would also recommend to install pycharm.
+- Create a virtual environment with ``conda create -n neuron_poker python=3.7``
+- Activate it with ``conda activate neuron_poker``, then install all required packages with ``pip install -r requirements.txt``
+- Run 6 random players playing against each other:
+  ``main.py random --render`` or
+- To manually control the players:``main.py keypress --render``
+- Example of genetic algorighm with self improvement: ``main.py equity_improvement --improvement_rounds=20 --episodes=10``
+- In order to use the c++ version of the equity calculator, you will also need to install visual studio 2019 (or gcc over cygwin may work as well). To use it, use the -c option when running main.py.
+- FOr more advanced users: ``main.py dqn_train -c`` will start training the deep Q agent with c++ montecarlo for faster calculation
 
 .. figure:: doc/table.png
    :alt:
@@ -75,18 +77,17 @@ tests
 Roadmap
 -------
 
-Agents
-~~~~~~
+Agents and roadmap
+~~~~~~~~~~~~~~~~~~
 
 - [x] Agent based on user interaction (keypress)
 - [x] Random agent
 - [x] Equity based strategy (i.e. call and bet above threshold)
 - [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
-- [x] Reinforcement learning with experience replay (Deep Q learning)
-- [ ] Deep SARSA [[10]](http://people.inf.elte.hu/lorincz/Files/RL_2006/SuttonBook.pdf)
-- [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
-- [ ] Monte Carlo counterfactual regret minimization (MCCFR) [[7]](https://science.sciencemag.org/content/early/2019/07/10/science.aay2400)
-
+- [x] C++ imlementation of equity calculator to significantly speed up runs
+- [x] Agent based on reinforcement learning with experience replay (Deep Q learning, based on keras-rl)
+- [ ] Agent based with heinseight experience replay (HER)
+- [ ] Agent based on ...
 
 Reinforcement learning: Deep Q agent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

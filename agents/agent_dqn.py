@@ -23,11 +23,11 @@ from rl.core import Processor
 autplay = True  # play automatically if played against keras-rl
 
 window_length = 1
-nb_max_start_steps = 20  # random action
-train_interval = 100  # random action
-nb_steps_warmup = 75  # before training starts, should be higher than start steps
-nb_steps = 25000
-memory_limit = int(nb_steps / 10)
+nb_max_start_steps = 5  # random action
+train_interval = 100  # train every 100 steps
+nb_steps_warmup = 10  # before training starts, should be higher than start steps
+nb_steps = 100000
+memory_limit = int(nb_steps / 2)
 batch_size = 500  # items sampled from memory to train
 enable_double_dqn = False
 
