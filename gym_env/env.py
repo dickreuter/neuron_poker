@@ -255,7 +255,7 @@ class HoldemTable(Env):
         self.community_data.current_round_pot = self.current_round_pot / (self.big_blind * 100)
         self.community_data.small_blind = self.small_blind
         self.community_data.big_blind = self.big_blind
-        self.community_data.stage[np.minimum(self.stage.value, 3)] = 1 # pylint: disable= invalid-sequence-index
+        self.community_data.stage[np.minimum(self.stage.value, 3)] = 1  # pylint: disable= invalid-sequence-index
         self.community_data.legal_moves = [action in self.legal_moves for action in Action]
         # self.cummunity_data.active_players
 
@@ -267,7 +267,7 @@ class HoldemTable(Env):
 
         self.player_data.position = self.current_player.seat
         self.current_player.equity_alive = self.get_equity(set(self.current_player.cards), set(self.table_cards),
-                                                      sum(self.player_cycle.alive), 1000)
+                                                           sum(self.player_cycle.alive), 1000)
         self.player_data.equity_to_river_alive = self.current_player.equity_alive
 
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))
@@ -278,12 +278,12 @@ class HoldemTable(Env):
         self.array_everything = np.concatenate([arr1, arr2, arr3]).flatten()
 
         self.observation = self.array_everything
+        self._get_legal_moves()
 
         self.info = {'player_data': self.player_data.__dict__,
                      'community_data': self.community_data.__dict__,
-                     'stage_data': [stage.__dict__ for stage in self.stage_data]}
-
-        self._get_legal_moves()
+                     'stage_data': [stage.__dict__ for stage in self.stage_data],
+                     'legal_moves': self.legal_moves}
 
         self.observation_space = self.array_everything.shape
 

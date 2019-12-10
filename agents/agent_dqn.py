@@ -23,9 +23,9 @@ from rl.core import Processor
 autplay = True  # play automatically if played against keras-rl
 
 window_length = 1
-nb_max_start_steps = 5  # random action
+nb_max_start_steps = 20  # random action
 train_interval = 100  # train every 100 steps
-nb_steps_warmup = 10  # before training starts, should be higher than start steps
+nb_steps_warmup = 50  # before training starts, should be higher than start steps
 nb_steps = 100000
 memory_limit = int(nb_steps / 2)
 batch_size = 500  # items sampled from memory to train
@@ -73,22 +73,6 @@ class Player:
         # even the metrics!
         memory = SequentialMemory(limit=memory_limit, window_length=window_length)
         policy = TrumpPolicy()
-
-        class CustomProcessor(Processor):
-            """The agent and the environment"""
-
-            def process_state_batch(self, batch):
-                """
-                Given a state batch, I want to remove the second dimension, because it's
-                useless and prevents me from feeding the tensor into my CNN
-                """
-                return np.squeeze(batch, axis=1)
-
-            def process_info(self, info):
-                processed_info = info['player_data']
-                if 'stack' in processed_info:
-                    processed_info = {'x': 1}
-                return processed_info
 
         nb_actions = env.action_space.n
 
@@ -200,4 +184,35 @@ class TrumpPolicy(BoltzmannQPolicy):
         probs = exp_values / np.sum(exp_values)
         action = np.random.choice(range(nb_actions), p=probs)
         log.info(f"Chosen action by keras-rl {action} - probabilities: {probs}")
+        return action
+
+
+class CustomProcessor(Processor):
+    """The agent and the environment"""
+
+    def process_state_batch(self, batch):
+        """Remove second dimension to make it possible to pass it into cnn"""
+        return np.squeeze(batch, axis=1)
+
+    def process_info(self, info):
+        if 'legal_moves' in info.keys():
+            self.legal_moves_limit = info['legal_moves']
+        else:
+            self.legal_moves_limit = None
+        return {'x': 1}  # on arrays allowed it seems
+
+    def process_action(self, action):
+        """Find nearest legal action"""
+        if 'legal_moves_limit' in self.__dict__:
+            self.legal_moves_limit = [move.value for move in self.legal_moves_limit]
+            if action not in self.legal_moves_limit:
+                for i in range(5):
+                    action += i
+                    if action in self.legal_moves_limit:
+                        break
+                    action -= i * 2
+                    if action in self.legal_moves_limit:
+                        break
+                    action += i
+
         return action

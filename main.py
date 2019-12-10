@@ -13,6 +13,7 @@ options:
   -h --help                 Show this screen.
   -r --render               render screen
   -c --use_cpp_montecarlo   use cpp implementation of equity calculator. Requires cpp compiler but is 500x faster
+  -f --funds_plot           Plot funds at end of episode
   --log                     log file
   --screenloglevel          log level on screen
   --episodes=<>             number of episodes to play
@@ -52,7 +53,8 @@ def command_line_parser():
     log.info("Initializing program")
 
     num_episodes = 1 if not args['--episodes'] else int(args['--episodes'])
-    runner = Runner(render=args['--render'], num_episodes=num_episodes, use_cpp_montecarlo=args['--use_cpp_montecarlo'])
+    runner = Runner(render=args['--render'], num_episodes=num_episodes, use_cpp_montecarlo=args['--use_cpp_montecarlo'],
+                    funds_plot=args['--funds_plot'])
 
     if args['random']:
         runner.random_agents()
@@ -80,10 +82,11 @@ def command_line_parser():
 class Runner:
     """Orchestration"""
 
-    def __init__(self, render, num_episodes, use_cpp_montecarlo):
+    def __init__(self, render, num_episodes, use_cpp_montecarlo, funds_plot):
         """Initialize"""
         self.winner_in_episodes = []
         self.use_cpp_montecarlo = use_cpp_montecarlo
+        self.funds_plot = funds_plot
         self.render = render
         self.env = None
         self.num_episodes = num_episodes
@@ -105,7 +108,7 @@ class Runner:
         """Create an environment with 6 key press agents"""
         env_name = 'neuron_poker-v0'
         stack = 500
-        num_of_plrs = 6
+        num_of_plrs = 2
         self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
         for _ in range(num_of_plrs):
             player = KeyPressAgent()
@@ -133,6 +136,8 @@ class Runner:
         league_table = pd.Series(self.winner_in_episodes).value_counts()
         best_player = league_table.index[0]
 
+        print("League Table")
+        print("============")
         print(league_table)
         print(f"Best Player: {best_player}")
 
@@ -171,15 +176,16 @@ class Runner:
         """Implementation of kreras-rl deep q learing."""
         env_name = 'neuron_poker-v0'
         stack = 100
-        env = gym.make(env_name, num_of_players=2, initial_stacks=stack, funds_plot=False, render=self.render, use_cpp_montecarlo=self.use_cpp_montecarlo)
+        env = gym.make(env_name, num_of_players=3, initial_stacks=stack, funds_plot=self.funds_plot, render=self.render,
+                       use_cpp_montecarlo=self.use_cpp_montecarlo)
 
         np.random.seed(123)
         env.seed(123)
-        env.add_player(EquityPlayer(name='equity/50/70', min_call_equity=.5, min_bet_equity=.7))
+        #        env.add_player(EquityPlayer(name='equity/50/70', min_call_equity=.5, min_bet_equity=.7))
         env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=.3))
         env.add_player(RandomPlayer())
-        env.add_player(RandomPlayer())
-        env.add_player(RandomPlayer())
+        # env.add_player(RandomPlayer())
+        # env.add_player(RandomPlayer())
         env.add_player(PlayerShell(name='keras-rl', stack_size=stack))  # shell is used for callback to keras rl
 
         env.reset()
