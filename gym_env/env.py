@@ -87,7 +87,7 @@ class Stage(Enum):
 class HoldemTable(Env):
     """Pokergame environment"""
 
-    def __init__(self, num_of_players=6, initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
+    def __init__(self, initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
                  max_raising_rounds=2, use_cpp_montecarlo=False):
         """
         The table needs to be initialized once at the beginning
@@ -110,7 +110,7 @@ class HoldemTable(Env):
             from tools.montecarlo_python import get_equity
         self.get_equity = get_equity
         self.use_cpp_montecarlo = use_cpp_montecarlo
-        self.num_of_players = num_of_players
+        self.num_of_players = 0
         self.small_blind = small_blind
         self.big_blind = big_blind
         self.render_switch = render
@@ -267,7 +267,7 @@ class HoldemTable(Env):
 
         self.player_data.position = self.current_player.seat
         self.current_player.equity_alive = self.get_equity(set(self.current_player.cards), set(self.table_cards),
-                                                           sum(self.player_cycle.alive), 1000)
+                                                           sum(self.player_cycle.alive), 10)
         self.player_data.equity_to_river_alive = self.current_player.equity_alive
 
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))
@@ -294,7 +294,7 @@ class HoldemTable(Env):
         """
         Preliminiary implementation of reward function
 
-        - Currently missing potential additional winnings fro future contributions
+        - Currently missing potential additional winnings from future contributions
         """
         # if last_action == Action.FOLD:
         #     self.reward = -(
@@ -515,6 +515,7 @@ class HoldemTable(Env):
 
     def add_player(self, agent):
         """Add a player to the table. Has to happen at the very beginning"""
+        self.num_of_players += 1
         player = PlayerShell(stack_size=self.initial_stacks, name=agent.name)
         player.agent_obj = agent
         player.seat = len(self.players)  # assign next seat number to player

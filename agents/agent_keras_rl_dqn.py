@@ -23,7 +23,7 @@ from rl.core import Processor
 autplay = True  # play automatically if played against keras-rl
 
 window_length = 1
-nb_max_start_steps = 20  # random action
+nb_max_start_steps = 1  # random action
 train_interval = 100  # train every 100 steps
 nb_steps_warmup = 50  # before training starts, should be higher than start steps
 nb_steps = 100000

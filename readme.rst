@@ -49,9 +49,19 @@ Please add your model based agents here.
 -  ``agent_random.py``: an agent making random decisions
 -  ``agent_keypress.py``: an agent taking decision via keypress
 -  ``agent_consider_equity.py``: an agent considering equity information
--  ``agent_dqn.py``: Deep Q learning agent, using keras-rl for deep reinforcement learning
+-  ``agent_keras_rl_dqn.py``: Deep Q learning agent, using keras-rl for deep reinforcement learning
+-  ``agent_custom_q1.py``: Custom implementation of deep q learning
 
 Note that the observation property is a dictionary that contains all the information about the players and table that can be used to make a decision.
+
+rl
+~~
+Custom impelemtation of reinforcement learning
+
+-  ``q.py``: General logic, forward and backward passes for deep q learning
+-  ``policies.py``: decision policies based on q values
+-  ``memory.py``: memory management for experience replay
+
 
 tools
 ~~~~~

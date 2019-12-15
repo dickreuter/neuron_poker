@@ -15,7 +15,7 @@ options:
   -c --use_cpp_montecarlo   use cpp implementation of equity calculator. Requires cpp compiler but is 500x faster
   -f --funds_plot           Plot funds at end of episode
   --log                     log file
-  --screenloglevel          log level on screen
+  --screenloglevel=<>       log level on screen
   --episodes=<>             number of episodes to play
 
 """
@@ -28,9 +28,10 @@ from docopt import docopt
 
 import gym
 from agents.agent_consider_equity import Player as EquityPlayer
-from agents.agent_dqn import Player as DQNPlayer
+from agents.agent_keras_rl_dqn import Player as DQNPlayer
 from agents.agent_keypress import Player as KeyPressAgent
 from agents.agent_random import Player as RandomPlayer
+from agents.agent_custom_q1 import Player as Custom_Q1
 from gym_env.env import PlayerShell
 from tools.helper import get_config
 from tools.helper import init_logger
@@ -70,10 +71,10 @@ def command_line_parser():
         runner.equity_self_improvement(improvement_rounds)
 
     elif args['dqn_train']:
-        runner.dqn_train()
+        runner.dqn_train_keras_rl()
 
     elif args['dqn_play']:
-        runner.dqn_play()
+        runner.dqn_play_keras_rl()
 
     else:
         raise RuntimeError("Argument not yet implemented")
@@ -96,8 +97,8 @@ class Runner:
         """Create an environment with 6 random players"""
         env_name = 'neuron_poker-v0'
         stack = 500
-        num_of_plrs = 6
-        self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
+        num_of_plrs = 2
+        self.env = gym.make(env_name, initial_stacks=stack, render=self.render)
         for _ in range(num_of_plrs):
             player = RandomPlayer()
             self.env.add_player(player)
@@ -109,7 +110,7 @@ class Runner:
         env_name = 'neuron_poker-v0'
         stack = 500
         num_of_plrs = 2
-        self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
+        self.env = gym.make(env_name, initial_stacks=stack, render=self.render)
         for _ in range(num_of_plrs):
             player = KeyPressAgent()
             self.env.add_player(player)
@@ -120,8 +121,7 @@ class Runner:
         """Create 6 players, 4 of them equity based, 2 of them random"""
         env_name = 'neuron_poker-v0'
         stack = 500
-        num_of_plrs = 6
-        self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
+        self.env = gym.make(env_name, initial_stacks=stack, render=self.render)
         self.env.add_player(EquityPlayer(name='equity/50/50', min_call_equity=.5, min_bet_equity=-.5))
         self.env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=-.8))
         self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
@@ -149,7 +149,7 @@ class Runner:
         for improvement_round in range(improvement_rounds):
             env_name = 'neuron_poker-v0'
             stack = 500
-            self.env = gym.make(env_name, num_of_players=6, initial_stacks=stack, render=self.render)
+            self.env = gym.make(env_name, initial_stacks=stack, render=self.render)
             for i in range(6):
                 self.env.add_player(EquityPlayer(name=f'Equity/{calling[i]}/{betting[i]}',
                                                  min_call_equity=calling[i],
@@ -172,11 +172,11 @@ class Runner:
                 betting[i] = np.mean([betting[i], betting[best_player]])
                 self.log.info(f"New betting for player {i} is {betting[i]}")
 
-    def dqn_train(self):
+    def dqn_train_keras_rl(self):
         """Implementation of kreras-rl deep q learing."""
         env_name = 'neuron_poker-v0'
         stack = 100
-        env = gym.make(env_name, num_of_players=3, initial_stacks=stack, funds_plot=self.funds_plot, render=self.render,
+        env = gym.make(env_name, initial_stacks=stack, funds_plot=self.funds_plot, render=self.render,
                        use_cpp_montecarlo=self.use_cpp_montecarlo)
 
         np.random.seed(123)
@@ -194,12 +194,11 @@ class Runner:
         dqn.initiate_agent(env)
         dqn.train(env_name='dqn1')
 
-    def dqn_play(self):
+    def dqn_play_keras_rl(self):
         """Create 6 players, one of them a trained DQN"""
         env_name = 'neuron_poker-v0'
         stack = 500
-        num_of_plrs = 6
-        self.env = gym.make(env_name, num_of_players=num_of_plrs, initial_stacks=stack, render=self.render)
+        self.env = gym.make(env_name, initial_stacks=stack, render=self.render)
         self.env.add_player(EquityPlayer(name='equity/50/50', min_call_equity=.5, min_bet_equity=.5))
         self.env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=.8))
         self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=.7))
@@ -211,6 +210,32 @@ class Runner:
 
         dqn = DQNPlayer(load_model='dqn1', env=self.env)
         dqn.play(nb_episodes=self.num_episodes, render=self.render)
+
+    def dqn_train_custom_q1(self):
+        """Create 6 players, 4 of them equity based, 2 of them random"""
+        env_name = 'neuron_poker-v0'
+        stack = 500
+        self.env = gym.make(env_name, initial_stacks=stack, render=self.render)
+        # self.env.add_player(EquityPlayer(name='equity/50/50', min_call_equity=.5, min_bet_equity=-.5))
+        # self.env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=-.8))
+        # self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
+        self.env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=-.3))
+        # self.env.add_player(RandomPlayer())
+        self.env.add_player(RandomPlayer())
+        self.env.add_player(RandomPlayer())
+        self.env.add_player(Custom_Q1(name='Deep_Q1'))
+
+        for _ in range(self.num_episodes):
+            self.env.reset()
+            self.winner_in_episodes.append(self.env.winner_ix)
+
+        league_table = pd.Series(self.winner_in_episodes).value_counts()
+        best_player = league_table.index[0]
+
+        print("League Table")
+        print("============")
+        print(league_table)
+        print(f"Best Player: {best_player}")
 
 
 if __name__ == '__main__':

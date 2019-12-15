@@ -6,11 +6,11 @@ import pytest
 calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
 
 
-def _runner(my_cards, cards_on_table, players, expected_result):
+def _runner(my_cards, cards_on_table, players, expected_result, iterations=5000):
     """Montecarlo test"""
     if len(cards_on_table) < 3:
         cards_on_table = {'null'}
-    equity = calculator.montecarlo(my_cards, cards_on_table, players, 50000) * 100
+    equity = calculator.montecarlo(my_cards, cards_on_table, players, iterations) * 100
     assert equity == pytest.approx(expected_result, abs=1)
 
 
