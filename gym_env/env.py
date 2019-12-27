@@ -786,7 +786,7 @@ class PlayerCycle:
             return False
 
         raiser_reference = self.last_raiser if self.last_raiser else 0
-        if self.max_steps_after_raiser and (self.counter > self.max_steps_after_raiser + raiser_reference):
+        if self.max_steps_after_raiser and (self.counter >= self.max_steps_after_raiser + raiser_reference):
             log.debug("max steps after raiser has been reached")
             return False
 
