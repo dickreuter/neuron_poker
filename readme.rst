@@ -18,7 +18,7 @@ Run:
 - To manually control the players:``main.py keypress --render``
 - Example of genetic algorighm with self improvement: ``main.py equity_improvement --improvement_rounds=20 --episodes=10``
 - In order to use the c++ version of the equity calculator, you will also need to install visual studio 2019 (or gcc over cygwin may work as well). To use it, use the -c option when running main.py.
-- FOr more advanced users: ``main.py dqn_train -c`` will start training the deep Q agent with c++ montecarlo for faster calculation
+- For more advanced users: ``main.py dqn_train -c`` will start training the deep Q agent with c++ montecarlo for faster calculation
 
 .. figure:: doc/table.png
    :alt:
@@ -54,13 +54,19 @@ Please add your model based agents here.
 
 Note that the observation property is a dictionary that contains all the information about the players and table that can be used to make a decision.
 
-rl
-~~
+q-learning (work in progress)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Custom impelemtation of reinforcement learning
 
 -  ``q.py``: General logic, forward and backward passes for deep q learning
 -  ``policies.py``: decision policies based on q values
 -  ``memory.py``: memory management for experience replay
+
+Custom implementations:
+
+- [ ] Simple deep q learning based agent
+- [ ] Agent based with heinseight experience replay (HER)
+- [ ] A3C
 
 
 tools
@@ -87,8 +93,8 @@ tests
 Roadmap
 -------
 
-Agents and roadmap
-~~~~~~~~~~~~~~~~~~
+Agents
+~~~~~~
 
 - [x] Agent based on user interaction (keypress)
 - [x] Random agent
@@ -96,8 +102,7 @@ Agents and roadmap
 - [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
 - [x] C++ imlementation of equity calculator to significantly speed up runs
 - [x] Agent based on reinforcement learning with experience replay (Deep Q learning, based on keras-rl)
-- [ ] Agent based with heinseight experience replay (HER)
-- [ ] Agent based on ...
+- [/] Custom agents (see above section for more details)
 
 Reinforcement learning: Deep Q agent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
