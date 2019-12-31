@@ -54,19 +54,10 @@ Please add your model based agents here.
 
 Note that the observation property is a dictionary that contains all the information about the players and table that can be used to make a decision.
 
-q-learning (work in progress)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Custom impelemtation of reinforcement learning
-
--  ``q.py``: General logic, forward and backward passes for deep q learning
--  ``policies.py``: decision policies based on q values
--  ``memory.py``: memory management for experience replay
-
-Custom implementations:
-
-- [ ] Simple deep q learning based agent
-- [ ] Agent based with heinseight experience replay (HER)
-- [ ] A3C
+Custom implementation of q learning
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Custom impelemtation of reinforcement learning. This package is now in a separate repo:
+www.github.com/dickreuter/tf_rl
 
 
 tools
