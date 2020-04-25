@@ -15,6 +15,7 @@ options:
   -c --use_cpp_montecarlo   use cpp implementation of equity calculator. Requires cpp compiler but is 500x faster
   -f --funds_plot           Plot funds at end of episode
   --log                     log file
+  --name=<>                 Name of the saved model
   --screenloglevel=<>       log level on screen
   --episodes=<>             number of episodes to play
 
@@ -45,6 +46,7 @@ def command_line_parser():
     else:
         print("Using default log file")
         logfile = 'default'
+    model_name = args['--name'] if args['--name'] else 'dqn1'
     screenloglevel = logging.INFO if not args['--screenloglevel'] else \
         getattr(logging, args['--screenloglevel'].upper())
     _ = get_config()
@@ -71,7 +73,7 @@ def command_line_parser():
         runner.equity_self_improvement(improvement_rounds)
 
     elif args['dqn_train']:
-        runner.dqn_train_keras_rl()
+        runner.dqn_train_keras_rl(model_name)
 
     elif args['dqn_play']:
         runner.dqn_play_keras_rl()
@@ -172,7 +174,7 @@ class Runner:
                 betting[i] = np.mean([betting[i], betting[best_player]])
                 self.log.info(f"New betting for player {i} is {betting[i]}")
 
-    def dqn_train_keras_rl(self):
+    def dqn_train_keras_rl(self, model_name):
         """Implementation of kreras-rl deep q learing."""
         env_name = 'neuron_poker-v0'
         stack = 100
@@ -181,18 +183,18 @@ class Runner:
 
         np.random.seed(123)
         env.seed(123)
-        #        env.add_player(EquityPlayer(name='equity/50/70', min_call_equity=.5, min_bet_equity=.7))
+        env.add_player(EquityPlayer(name='equity/50/70', min_call_equity=.5, min_bet_equity=.7))
         env.add_player(EquityPlayer(name='equity/20/30', min_call_equity=.2, min_bet_equity=.3))
         env.add_player(RandomPlayer())
-        # env.add_player(RandomPlayer())
-        # env.add_player(RandomPlayer())
+        env.add_player(RandomPlayer())
+        env.add_player(RandomPlayer())
         env.add_player(PlayerShell(name='keras-rl', stack_size=stack))  # shell is used for callback to keras rl
 
         env.reset()
 
         dqn = DQNPlayer()
         dqn.initiate_agent(env)
-        dqn.train(env_name='dqn1')
+        dqn.train(env_name=model_name)
 
     def dqn_play_keras_rl(self):
         """Create 6 players, one of them a trained DQN"""

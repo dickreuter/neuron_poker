@@ -114,7 +114,7 @@ class Player:
         """Load a model"""
 
         # Load the architecture
-        with open('dqn_in_json.json', 'r') as architecture_json:
+        with open('dqn_{}_json.json'.format(env_name), 'r') as architecture_json:
             dqn_json = json.load(architecture_json)
 
         self.model = model_from_json(dqn_json)
