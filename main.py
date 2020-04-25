@@ -210,7 +210,7 @@ class Runner:
 
         self.env.reset()
 
-        dqn = DQNPlayer(load_model='dqn1', env=self.env)
+        dqn = DQNPlayer(load_model=model_name, env=self.env)
         dqn.play(nb_episodes=self.num_episodes, render=self.render)
 
     def dqn_train_custom_q1(self):
