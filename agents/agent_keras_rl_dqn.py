@@ -101,7 +101,7 @@ class Player:
 
         # Save the architecture
         dqn_json = self.model.to_json()
-        with open("dqn_in_json.json", "w") as json_file:
+        with open("dqn_{}_json.json".format(env_name), "w") as json_file:
             json.dump(dqn_json, json_file)
 
         # After training is done, we save the final weights.
