@@ -14,11 +14,11 @@ Run:
 - Create a virtual environment with ``conda create -n neuron_poker python=3.7``
 - Activate it with ``conda activate neuron_poker``, then install all required packages with ``pip install -r requirements.txt``
 - Run 6 random players playing against each other:
-  ``main.py random --render`` or
-- To manually control the players:``main.py keypress --render``
-- Example of genetic algorighm with self improvement: ``main.py equity_improvement --improvement_rounds=20 --episodes=10``
+  ``main.py selfplay random --render`` or
+- To manually control the players:``main.py selfplay keypress --render``
+- Example of genetic algorighm with self improvement: ``main.py selfplay equity_improvement --improvement_rounds=20 --episodes=10``
 - In order to use the c++ version of the equity calculator, you will also need to install visual studio 2019 (or gcc over cygwin may work as well). To use it, use the -c option when running main.py.
-- For more advanced users: ``main.py dqn_train -c`` will start training the deep Q agent with c++ montecarlo for faster calculation
+- For more advanced users: ``main.py selfplay dqn_train -c`` will start training the deep Q agent with c++ montecarlo for faster calculation
 
 .. figure:: doc/table.png
    :alt:

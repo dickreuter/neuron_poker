@@ -3,17 +3,15 @@
 
 import datetime
 import logging
-
 import multiprocessing
-from multiprocessing.pool import ThreadPool
 import os
-
 import pickle
 import sys
 import traceback
 from collections import Iterable  # pylint: disable=no-name-in-module
 from configparser import ConfigParser, ExtendedInterpolation
 from logging import handlers
+from multiprocessing.pool import ThreadPool
 
 import pandas as pd
 
@@ -71,9 +69,9 @@ class CustomConfigParser(metaclass=Singleton):
             self.config.read(main_file)
 
 
-def get_config(config_override_filename=None):
+def get_config():
     """Public accessor for config file."""
-    config = CustomConfigParser(config_override_filename)
+    config = CustomConfigParser(os.path.join(get_dir('codebase'), 'config.ini'))
     return config.config
 
 

@@ -1,7 +1,10 @@
 """manual keypress agent"""
-from tensorflow.python.keras.layers import Dense, Dropout
+from keras import Sequential
+from keras.layers import Dense, Dropout
+from rl.memory import SequentialMemory
 
-from gym_env.env import Action
+from agents.agent_keras_rl_dqn import TrumpPolicy, memory_limit, window_length
+from gym_env import env
 
 
 class Player:
@@ -15,12 +18,13 @@ class Player:
         self.temp_stack = []
         self.name = name
         self.autoplay = True
+        self.model = None
 
     def initiate_agent(self, nb_actions):
         """initiate a deep Q agent"""
 
         self.model = Sequential()
-        self.model.add(Dense(512, activation='relu', input_shape=env.observation_space))
+        self.model.add(Dense(512, activation='relu', input_shape=env.observation_space))  # pylint: disable=no-member
         self.model.add(Dropout(0.2))
         self.model.add(Dense(512, activation='relu'))
         self.model.add(Dropout(0.2))
@@ -30,10 +34,10 @@ class Player:
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
-        memory = SequentialMemory(limit=memory_limit, window_length=window_length)
-        policy = TrumpPolicy()
+        memory = SequentialMemory(limit=memory_limit, window_length=window_length)  # pylint: disable=unused-variable
+        policy = TrumpPolicy()  # pylint: disable=unused-variable
 
-    def action(self, action_space, observation, info):  # pylint: disable=no-self-use
+    def action(self, action_space, observation, info):  # pylint: disable=no-self-use,unused-argument
         """Mandatory method that calculates the move based on the observation array and the action space."""
         _ = (observation, info)  # not using the observation for random decision
         action = None

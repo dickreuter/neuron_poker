@@ -2,12 +2,13 @@
 neuron poker
 
 Usage:
-  main.py random [options]
-  main.py keypress [options]
-  main.py consider_equity [options]
-  main.py equity_improvement --improvement_rounds=<> [options]
-  main.py dqn_train [options]
-  main.py dqn_play [options]
+  main.py selfplay random [options]
+  main.py selfplay keypress [options]
+  main.py selfplay consider_equity [options]
+  main.py selfplay equity_improvement --improvement_rounds=<> [options]
+  main.py selfplay dqn_train [options]
+  main.py selfplay dqn_play [options]
+  main.py learn_table_scraping [options]
 
 options:
   -h --help                 Show this screen.
@@ -23,20 +24,17 @@ options:
 
 import logging
 
+import gym
 import numpy as np
 import pandas as pd
 from docopt import docopt
 
-import gym
-from agents.agent_consider_equity import Player as EquityPlayer
-from agents.agent_keras_rl_dqn import Player as DQNPlayer
-from agents.agent_keypress import Player as KeyPressAgent
-from agents.agent_random import Player as RandomPlayer
-from agents.agent_custom_q1 import Player as Custom_Q1
 from gym_env.env import PlayerShell
 from tools.helper import get_config
 from tools.helper import init_logger
 
+
+# pylint: disable=import-outside-toplevel
 
 def command_line_parser():
     """Entry function"""
@@ -55,35 +53,38 @@ def command_line_parser():
     log = logging.getLogger("")
     log.info("Initializing program")
 
-    num_episodes = 1 if not args['--episodes'] else int(args['--episodes'])
-    runner = Runner(render=args['--render'], num_episodes=num_episodes, use_cpp_montecarlo=args['--use_cpp_montecarlo'],
-                    funds_plot=args['--funds_plot'])
+    if args['selfplay']:
+        num_episodes = 1 if not args['--episodes'] else int(args['--episodes'])
+        runner = SelfPlay(render=args['--render'], num_episodes=num_episodes,
+                          use_cpp_montecarlo=args['--use_cpp_montecarlo'],
+                          funds_plot=args['--funds_plot'])
 
-    if args['random']:
-        runner.random_agents()
+        if args['random']:
+            runner.random_agents()
 
-    elif args['keypress']:
-        runner.key_press_agents()
+        elif args['keypress']:
+            runner.key_press_agents()
 
-    elif args['consider_equity']:
-        runner.equity_vs_random()
+        elif args['consider_equity']:
+            runner.equity_vs_random()
 
-    elif args['equity_improvement']:
-        improvement_rounds = int(args['--improvement_rounds'])
-        runner.equity_self_improvement(improvement_rounds)
+        elif args['equity_improvement']:
+            improvement_rounds = int(args['--improvement_rounds'])
+            runner.equity_self_improvement(improvement_rounds)
 
-    elif args['dqn_train']:
-        runner.dqn_train_keras_rl(model_name)
+        elif args['dqn_train']:
+            runner.dqn_train_keras_rl(model_name)
 
-    elif args['dqn_play']:
-        runner.dqn_play_keras_rl()
+        elif args['dqn_play']:
+            runner.dqn_play_keras_rl(model_name)
+
 
     else:
         raise RuntimeError("Argument not yet implemented")
 
 
-class Runner:
-    """Orchestration"""
+class SelfPlay:
+    """Orchestration of playing against itself"""
 
     def __init__(self, render, num_episodes, use_cpp_montecarlo, funds_plot):
         """Initialize"""
@@ -97,6 +98,7 @@ class Runner:
 
     def random_agents(self):
         """Create an environment with 6 random players"""
+        from agents.agent_random import Player as RandomPlayer
         env_name = 'neuron_poker-v0'
         stack = 500
         num_of_plrs = 2
@@ -109,6 +111,7 @@ class Runner:
 
     def key_press_agents(self):
         """Create an environment with 6 key press agents"""
+        from agents.agent_keypress import Player as KeyPressAgent
         env_name = 'neuron_poker-v0'
         stack = 500
         num_of_plrs = 2
@@ -121,6 +124,8 @@ class Runner:
 
     def equity_vs_random(self):
         """Create 6 players, 4 of them equity based, 2 of them random"""
+        from agents.agent_consider_equity import Player as EquityPlayer
+        from agents.agent_random import Player as RandomPlayer
         env_name = 'neuron_poker-v0'
         stack = 500
         self.env = gym.make(env_name, initial_stacks=stack, render=self.render)
@@ -145,6 +150,7 @@ class Runner:
 
     def equity_self_improvement(self, improvement_rounds):
         """Create 6 players, 4 of them equity based, 2 of them random"""
+        from agents.agent_consider_equity import Player as EquityPlayer
         calling = [.1, .2, .3, .4, .5, .6]
         betting = [.2, .3, .4, .5, .6, .7]
 
@@ -176,6 +182,9 @@ class Runner:
 
     def dqn_train_keras_rl(self, model_name):
         """Implementation of kreras-rl deep q learing."""
+        from agents.agent_consider_equity import Player as EquityPlayer
+        from agents.agent_keras_rl_dqn import Player as DQNPlayer
+        from agents.agent_random import Player as RandomPlayer
         env_name = 'neuron_poker-v0'
         stack = 100
         env = gym.make(env_name, initial_stacks=stack, funds_plot=self.funds_plot, render=self.render,
@@ -196,8 +205,11 @@ class Runner:
         dqn.initiate_agent(env)
         dqn.train(env_name=model_name)
 
-    def dqn_play_keras_rl(self):
+    def dqn_play_keras_rl(self, model_name):
         """Create 6 players, one of them a trained DQN"""
+        from agents.agent_consider_equity import Player as EquityPlayer
+        from agents.agent_keras_rl_dqn import Player as DQNPlayer
+        from agents.agent_random import Player as RandomPlayer
         env_name = 'neuron_poker-v0'
         stack = 500
         self.env = gym.make(env_name, initial_stacks=stack, render=self.render)
@@ -215,6 +227,9 @@ class Runner:
 
     def dqn_train_custom_q1(self):
         """Create 6 players, 4 of them equity based, 2 of them random"""
+        from agents.agent_consider_equity import Player as EquityPlayer
+        from agents.agent_custom_q1 import Player as Custom_Q1
+        from agents.agent_random import Player as RandomPlayer
         env_name = 'neuron_poker-v0'
         stack = 500
         self.env = gym.make(env_name, initial_stacks=stack, render=self.render)

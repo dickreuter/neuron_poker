@@ -12,7 +12,8 @@ from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
 from tools.hand_evaluator import get_winner
 from tools.helper import flatten
 
-__author__ = 'Nicolas Dickreuter'
+# pylint: disable=import-outside-toplevel
+
 log = logging.getLogger(__name__)
 
 winner_in_episodes = []
@@ -267,7 +268,7 @@ class HoldemTable(Env):
 
         self.player_data.position = self.current_player.seat
         self.current_player.equity_alive = self.get_equity(set(self.current_player.cards), set(self.table_cards),
-                                                           sum(self.player_cycle.alive), 10)
+                                                           sum(self.player_cycle.alive), 1000)
         self.player_data.equity_to_river_alive = self.current_player.equity_alive
 
         arr1 = np.array(list(flatten(self.player_data.__dict__.values())))

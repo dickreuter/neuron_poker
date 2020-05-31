@@ -11,7 +11,7 @@ def _runner(my_cards, cards_on_table, players, expected_result, iterations=5000)
     if len(cards_on_table) < 3:
         cards_on_table = {'null'}
     equity = calculator.montecarlo(my_cards, cards_on_table, players, iterations) * 100
-    assert equity == pytest.approx(expected_result, abs=1)
+    assert equity == pytest.approx(expected_result, abs=3)
 
 
 def test_montecarlo1():

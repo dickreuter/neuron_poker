@@ -37,8 +37,8 @@ def _runner(simulation, my_cards, cards_on_table, players, expected_results, opp
     log.info("Mean: " + str(avg))
     log.info("Stdev: " + str(stdev))
 
-    assert abs(avg - expected_results) < 2
-    assert abs(stdev) < 2
+    assert abs(avg - expected_results) < 3
+    assert abs(stdev) < 3
 
 
 def test_montecarlo1():
