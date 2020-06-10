@@ -190,10 +190,6 @@ class TrumpPolicy(BoltzmannQPolicy):
 class CustomProcessor(Processor):
     """The agent and the environment"""
 
-    def __init__(self):
-        """initizlie properties"""
-        self.legal_moves_limit = None
-
     def process_state_batch(self, batch):
         """Remove second dimension to make it possible to pass it into cnn"""
         return np.squeeze(batch, axis=1)
