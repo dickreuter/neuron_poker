@@ -55,11 +55,11 @@ def test_no_player_raise_big_blind_do_last_action_in_round():
     env.step(Action.BIG_BLIND)
     env.step(Action.CALL)
 
-    assert env.stage == env.stage.PREFLOP
+    assert env.stage == Stage.PREFLOP
 
     env.step(Action.CHECK)
 
-    assert env.stage == env.stage.FLOP
+    assert env.stage == Stage.FLOP
 
 
 def test_heads_up_after_flop():
