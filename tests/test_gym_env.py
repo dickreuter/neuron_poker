@@ -14,31 +14,52 @@ def _create_env(n_players):
     return env
 
 
-def test_scenario1():
+def test_basic_actions_with_6_player():
     """Test basic actions with 6 players."""
     env = _create_env(6)
     assert len(env.players[0].cards) == 2
     assert env.current_player.seat == 3  # start with utg
 
-    env.step(Action.CALL)
-    env.step(Action.FOLD)
-    env.step(Action.FOLD)
-    env.step(Action.FOLD)
-    env.step(Action.CALL)
-    assert env.current_player.seat == 1  # bb
+    env.step(Action.CALL)  # 3
+    env.step(Action.FOLD)  # 4
+    env.step(Action.FOLD)  # 5
+    env.step(Action.FOLD)  # 0 dealer
+    env.step(Action.CALL)  # 1 small blind
+    assert env.current_player.seat == 2  # 2 big blind
     assert env.players[3].stack == 98
     assert env.players[4].stack == 100
     assert env.players[5].stack == 100
     assert env.players[0].stack == 100
     assert env.players[1].stack == 98
     assert env.players[2].stack == 98
-    assert env.stage == Stage.FLOP
-    env.step(Action.RAISE_POT)  # bb raises
+    assert env.stage == Stage.PREFLOP
+    env.step(Action.RAISE_POT)  # big blind raises
     # assert env.player_cycle.second_round
     # env.step(Action.FOLD)  # utg
     # env.step(Action.CALL)  # 4 only remaining player calls
     # assert env.stage == Stage.FLOP
     # env.step(Action.CHECK)
+
+
+def test_no_player_raise_big_blind_do_last_action_in_round():
+    """1. Test verifies solving of bugs see posts of dsfdsfgdsa in
+    https://github.com/dickreuter/neuron_poker/issues/25.
+    Bug description: In a round where no one raise, should the big blind do the last action.
+    Without fix from  dsfdsfgdsa on 10.06.2020 the small blind do the last action.
+    2. Bug description: Check of big blind does not end round (pre-flop).
+    The problem for this bug is that the check of big blind is not recognized as legal move.
+    This bug is solved with fix from dsfdsfgdsa on 10.06.2020"""
+    env = _create_env(2)
+
+    env.step(Action.SMALL_BLIND)
+    env.step(Action.BIG_BLIND)
+    env.step(Action.CALL)
+
+    assert env.stage == Stage.PREFLOP
+
+    env.step(Action.CHECK)
+
+    assert env.stage == Stage.FLOP
 
 
 def test_heads_up_after_flop():

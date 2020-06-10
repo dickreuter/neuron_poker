@@ -614,7 +614,7 @@ class HoldemTable(Env):
     def _get_legal_moves(self):
         """Determine what moves are allowed in the current state"""
         self.legal_moves = []
-        if self.current_round_pot == 0:
+        if self.player_pots[self.current_player.seat] == max(self.player_pots):
             self.legal_moves.append(Action.CHECK)
         else:
             self.legal_moves.append(Action.CALL)
@@ -788,7 +788,7 @@ class PlayerCycle:
             return False
 
         raiser_reference = self.last_raiser if self.last_raiser else 0
-        if self.max_steps_after_raiser and (self.counter >= self.max_steps_after_raiser + raiser_reference):
+        if self.max_steps_after_raiser and (self.counter > self.max_steps_after_raiser + raiser_reference):
             log.debug("max steps after raiser has been reached")
             return False
 
