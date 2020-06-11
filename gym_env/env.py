@@ -172,7 +172,8 @@ class HoldemTable(Env):
             player.stack = self.initial_stacks
 
         self.dealer_pos = 0
-        self.player_cycle = PlayerCycle(self.players, dealer_idx=-1, max_steps_after_raiser=len(self.players))
+        self.player_cycle = PlayerCycle(self.players, dealer_idx=-1, max_steps_after_raiser=len(self.players) - 1,
+                                        max_steps_after_big_blind=len(self.players))
         self._start_new_hand()
         self._get_environment()
         # auto play for agents where autoplay is set
@@ -360,18 +361,15 @@ class HoldemTable(Env):
 
             elif action == Action.SMALL_BLIND:
                 contribution = np.minimum(self.small_blind, self.current_player.stack)
-                self.last_raiser = self.current_player.seat
 
             elif action == Action.BIG_BLIND:
                 contribution = np.minimum(self.big_blind, self.current_player.stack)
-                self.last_raiser = self.current_player.seat
                 self.player_cycle.mark_bb()
             else:
                 raise RuntimeError("Illegal action.")
 
             if contribution > self.min_call:
                 self.player_cycle.mark_raiser()
-                self.last_raiser = self.current_player.seat
 
             self.current_player.stack -= contribution
             self.player_pots[self.current_player.seat] += contribution
@@ -736,7 +734,7 @@ class PlayerCycle:
     """Handle the circularity of the Table."""
 
     def __init__(self, lst, start_idx=0, dealer_idx=0, max_steps_total=None,
-                 last_raiser_step=None, max_steps_after_raiser=None):
+                 last_raiser_step=None, max_steps_after_raiser=None, max_steps_after_big_blind=None):
         """Cycle over a list"""
         self.lst = lst
         self.start_idx = start_idx
@@ -744,8 +742,10 @@ class PlayerCycle:
         self.max_steps_total = max_steps_total
         self.last_raiser_step = last_raiser_step
         self.max_steps_after_raiser = max_steps_after_raiser
+        self.max_steps_after_big_blind = max_steps_after_big_blind
         self.last_raiser = None
-        self.counter = 0
+        self.step_counter = 0
+        self.steps_for_blind_betting = 2
         self.second_round = False
         self.idx = 0
         self.dealer_idx = dealer_idx
@@ -762,11 +762,11 @@ class PlayerCycle:
         self.can_still_make_moves_in_this_hand = [True] * len(self.lst)
         self.out_of_cash_but_contributed = [False] * len(self.lst)
         self.folder = [False] * len(self.lst)
-        self.counter = 0
+        self.step_counter = 0
 
     def new_round_reset(self):
         """Reset the state for the next stage: flop, turn or river"""
-        self.counter = 0
+        self.step_counter = 0
         self.second_round = False
         self.idx = self.dealer_idx
         self.last_raiser_step = len(self.lst)
@@ -779,16 +779,21 @@ class PlayerCycle:
             return False  # only one player remains
 
         self.idx += step
-        self.counter += step
+        self.step_counter += step
         self.idx %= len(self.lst)
-        if self.counter > len(self.lst):
+        if self.step_counter > len(self.lst):
             self.second_round = True
-        if self.max_steps_total and (self.counter >= self.max_steps_total):
+        if self.max_steps_total and (self.step_counter >= self.max_steps_total):
             log.debug("Max steps total has been reached")
             return False
 
-        raiser_reference = self.last_raiser if self.last_raiser else 0
-        if self.max_steps_after_raiser and (self.counter > self.max_steps_after_raiser + raiser_reference):
+        if self.last_raiser:
+            raiser_reference = self.last_raiser
+            if self.max_steps_after_raiser and (self.step_counter > self.max_steps_after_raiser + raiser_reference):
+                log.debug("max steps after raiser has been reached")
+                return False
+        elif self.max_steps_after_raiser and \
+                (self.step_counter > self.max_steps_after_big_blind + self.steps_for_blind_betting):
             log.debug("max steps after raiser has been reached")
             return False
 
@@ -801,9 +806,9 @@ class PlayerCycle:
                 break
 
             self.idx += 1
-            self.counter += 1
+            self.step_counter += 1
             self.idx %= len(self.lst)
-            if self.max_steps_total and self.counter >= self.max_steps_total:
+            if self.max_steps_total and self.step_counter >= self.max_steps_total:
                 log.debug("Max steps total has been reached after jumping some folders")
                 return False
 
@@ -844,7 +849,8 @@ class PlayerCycle:
 
     def mark_raiser(self):
         """Mark a raise for the current player."""
-        self.last_raiser = self.counter
+        if self.step_counter > 2:
+            self.last_raiser = self.step_counter
 
     def mark_checker(self):
         """Counter the number of checks in the round"""
@@ -857,12 +863,12 @@ class PlayerCycle:
 
     def mark_bb(self):
         """Ensure bb can raise"""
-        self.last_raiser_step = self.counter + len(self.lst)
-        self.max_steps_total = self.counter + len(self.lst) * 2
+        self.last_raiser_step = self.step_counter + len(self.lst)
+        self.max_steps_total = self.step_counter + len(self.lst) * 2
 
     def is_raising_allowed(self):
         """Check if raising is still allowed at this position"""
-        return self.counter <= self.last_raiser_step
+        return self.step_counter <= self.last_raiser_step
 
     def update_alive(self):
         """Update the alive property"""
