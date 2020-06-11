@@ -34,11 +34,11 @@ def test_basic_actions_with_6_player():
     assert env.players[2].stack == 98
     assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_POT)  # big blind raises
-    # assert env.player_cycle.second_round
-    # env.step(Action.FOLD)  # utg
-    # env.step(Action.CALL)  # 4 only remaining player calls
-    # assert env.stage == Stage.FLOP
-    # env.step(Action.CHECK)
+    assert env.player_cycle.second_round
+    env.step(Action.FOLD)  # utg
+    env.step(Action.CALL)  # 4 only remaining player calls
+    assert env.stage == Stage.FLOP
+    env.step(Action.CHECK)
 
 
 def test_no_player_raise_big_blind_do_last_action_in_round():
