@@ -34,15 +34,16 @@ def test_basic_actions_with_6_player():
     assert env.players[2].stack == 98
     assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_POT)  # big blind raises
-    # assert env.player_cycle.second_round
-    # env.step(Action.FOLD)  # utg
-    # env.step(Action.CALL)  # 4 only remaining player calls
-    # assert env.stage == Stage.FLOP
-    # env.step(Action.CHECK)
+    assert env.player_cycle.second_round
+    env.step(Action.FOLD)  # utg
+    env.step(Action.CALL)  # 4 only remaining player calls
+    assert env.stage == Stage.FLOP
+    env.step(Action.CHECK)
 
 
 def test_no_player_raise_big_blind_do_last_action_in_round():
-    """1. Test verifies solving of bugs see posts of dsfdsfgdsa in
+    """
+    1. Test verifies solving of bugs see posts of dsfdsfgdsa in
     https://github.com/dickreuter/neuron_poker/issues/25.
     Bug description: In a round where no one raise, should the big blind do the last action.
     Without fix from  dsfdsfgdsa on 10.06.2020 the small blind do the last action.
@@ -58,6 +59,24 @@ def test_no_player_raise_big_blind_do_last_action_in_round():
     assert env.stage == Stage.PREFLOP
 
     env.step(Action.CHECK)
+
+    assert env.stage == Stage.FLOP
+
+
+def test_one_player_raise3bb_one_call_this_call_is_last_action_in_round():
+    """
+    1. Test verifies solving of bugs see posts of dsfdsfgdsa from 11.06.2020 in
+    https://github.com/dickreuter/neuron_poker/issues/25.
+    Bug description: One player Raise_3BB and other call normally now is the round over, but with bug the first player can check again."""
+    env = _create_env(2)
+
+    env.step(Action.SMALL_BLIND)
+    env.step(Action.BIG_BLIND)
+    env.step(Action.RAISE_3BB)
+
+    assert env.stage == Stage.PREFLOP
+
+    env.step(Action.CALL)
 
     assert env.stage == Stage.FLOP
 
