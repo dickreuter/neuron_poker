@@ -42,8 +42,7 @@ def test_basic_actions_with_6_player():
 
 
 def test_no_player_raise_big_blind_do_last_action_in_round():
-    """
-    1. Test verifies solving of bugs see posts of dsfdsfgdsa in
+    """1. Test verifies solving of bugs see posts of dsfdsfgdsa in
     https://github.com/dickreuter/neuron_poker/issues/25.
     Bug description: In a round where no one raise, should the big blind do the last action.
     Without fix from  dsfdsfgdsa on 10.06.2020 the small blind do the last action.
@@ -64,8 +63,7 @@ def test_no_player_raise_big_blind_do_last_action_in_round():
 
 
 def test_one_player_raise3bb_one_call_this_call_is_last_action_in_round():
-    """
-    1. Test verifies solving of bugs see posts of dsfdsfgdsa from 11.06.2020 in
+    """1. Test verifies solving of bugs see posts of dsfdsfgdsa from 11.06.2020 in
     https://github.com/dickreuter/neuron_poker/issues/25.
     Bug description: One player Raise_3BB and other call normally now is the round over, but with bug the first player can check again."""
     env = _create_env(2)
@@ -81,16 +79,20 @@ def test_one_player_raise3bb_one_call_this_call_is_last_action_in_round():
     assert env.stage == Stage.FLOP
 
 
+@pytest.mark.skip("Test-scenario is not like title of the test and player_cycle.alive has by several executions a "
+                  "changed behaviour")
 def test_heads_up_after_flop():
-    """All in at preflop leads to heads up after flop."""
+    """All in at pre-flop leads to heads up after flop.
+    For more info about skipping of this test see https://github.com/dickreuter/neuron_poker/issues/39.
+    Feel free to fix the issue"""
     env = _create_env(6)
-    env.step(Action.ALL_IN)  # utg
-    env.step(Action.ALL_IN)
-    env.step(Action.ALL_IN)
-    env.step(Action.ALL_IN)  # 0
-    env.step(Action.CALL)  # sb = all in
-    assert Action.ALL_IN in env.legal_moves  # bb has the option to raise
-    env.step(Action.FOLD)  # bb folds
+    env.step(Action.ALL_IN)  # seat 3 utg
+    env.step(Action.ALL_IN)  # seat 4
+    env.step(Action.ALL_IN)  # seat 5
+    env.step(Action.ALL_IN)  # seat 0
+    env.step(Action.CALL)  # seat 1 small blind = all in
+    assert Action.ALL_IN in env.legal_moves  # seat 2 big blind has the option to raise
+    env.step(Action.FOLD)  # seat 2 big blind folds
     assert sum(env.player_cycle.alive) == 2
     # two players left - heads up
     assert env.stage == Stage.PREFLOP  # start new hand
@@ -111,30 +113,30 @@ def test_heads_up_after_flop():
     assert env.stage == Stage.PREFLOP
 
 
-def test_scenario3():
+def test_base_actions_6_players_check_legal_moves_and_stages():
     """Test basic actions with 6 players."""
     env = _create_env(6)
-    env.step(Action.CALL)  # utg
-    env.step(Action.CALL)  # 4
-    env.step(Action.CALL)  # 5
-    env.step(Action.CALL)  # 0 dealer
+    env.step(Action.CALL)  # seat 3 utg
+    env.step(Action.CALL)  # seat 4
+    env.step(Action.CALL)  # seat 5
+    env.step(Action.CALL)  # seat 0 dealer
     assert env.stage == Stage.PREFLOP
-    env.step(Action.RAISE_HALF_POT)  # sb
+    env.step(Action.RAISE_HALF_POT)  # seat 1 small blind
     assert len(env.legal_moves) > 2
     assert env.stage == Stage.PREFLOP
-    env.step(Action.RAISE_HALF_POT)  # bb
+    env.step(Action.RAISE_HALF_POT)  # seat 2 big blind
     assert env.stage == Stage.PREFLOP
     assert len(env.legal_moves) == 2
-    env.step(Action.CALL)  # utg in second round
-    env.step(Action.CALL)  # 4
-    env.step(Action.CALL)  # 5
-    env.step(Action.CALL)  # dealer
+    env.step(Action.CALL)  # seat 3 utg in second round
+    env.step(Action.CALL)  # seat 4
+    env.step(Action.CALL)  # seat 5
+    env.step(Action.CALL)  # seat 0 dealer
     # todo: check if this is correct
     # assert env.stage == Stage.FLOP
-    # env.step(Action.CALL)  # sb
+    # env.step(Action.CALL)  # seat 1 small blind
     # assert env.stage == Stage.FLOP
     # assert env.current_player.seat == 1
-    # env.step(Action.RAISE_HALF_POT)
+    # env.step(Action.RAISE_HALF_POT) # seat 2 big blind
 
 
 def test_cycle_mechanism1():
@@ -194,14 +196,16 @@ class PlayerForTest:
 
 @pytest.mark.skip("Values need to be updated and be presented as proportion of bb*100")
 def test_call_proper_amount():
-    """Test if a player contributes the correct amount if they call behind a caller who could not cover and went all in"""
+    """Test if a player contributes the correct amount if they call behind a caller who could not cover and went all
+    in """
     env = _create_env(3)
     raise_size = 2 * (env.small_blind + env.big_blind)
 
     # Blinds should have been posted
     assert env.community_data.current_round_pot == env.big_blind + env.small_blind
 
-    # Button will raise pot size (2*(sb+bb)), sb will call all in with 1 for a total contribution of sb+1, bb should have to bet 2*sb+bb in order to call
+    # Button will raise pot size (2*(sb+bb)), sb will call all in with 1 for a total contribution of sb+1,
+    # bb should have to bet 2*sb+bb in order to call
     env.players[0].stack = raise_size
     env.players[1].stack = 1
     env.players[2].stack = raise_size - env.big_blind
