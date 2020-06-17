@@ -79,6 +79,44 @@ def test_one_player_raise3bb_one_call_this_call_is_last_action_in_round():
     assert env.stage == Stage.FLOP
 
 
+def test_raise_to_3_times_big_blind_after_big_blind_bet():
+    """1. Test size of raise to 3 times big blind after betting of big blind.
+    See https://github.com/dickreuter/neuron_poker/issues/41"""
+    env = _create_env(2)  # bet small blind and big blind
+
+    assert env.player_pots[0] == 2  # check bet of big blind by creation of environment
+
+    env.step(Action.CALL)
+    env.step(Action.RAISE_3BB)
+
+    assert env.player_pots[0] == 6  # raised to 3 times big blind like on Pokerstars
+
+
+def test_raise_to_3_times_big_blind_is_not_possible_with_not_enough_remaining_stack():
+    """1. Test raise to 3 times big blind is only possible with enough chips.
+    See https://github.com/dickreuter/neuron_poker/issues/41"""
+    env = _create_env(2)  # bet small blind and big blind
+    env.players[0].stack = 2
+
+    env.step(Action.CALL)
+    assert Action.RAISE_3BB not in env.legal_moves
+
+
+def test_raise_to_3_times_big_blind_is_possible_with_enough_remaining_stack():
+    """1. Test raise to 3 times big blind is only possible with enough chips.
+    See https://github.com/dickreuter/neuron_poker/issues/41"""
+    env = _create_env(2)  # bet small blind and big blind
+    env.players[0].stack = 4
+
+    env.step(Action.CALL)
+
+    assert Action.RAISE_3BB in env.legal_moves
+
+    env.step(Action.RAISE_3BB)
+
+    assert env.players[0].stack == 0
+
+
 @pytest.mark.skip("Test-scenario is not like title of the test and player_cycle.alive has by several executions a "
                   "changed behaviour")
 def test_heads_up_after_flop():
