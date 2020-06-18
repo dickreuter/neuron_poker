@@ -340,7 +340,7 @@ class HoldemTable(Env):
                 self.player_cycle.mark_checker()
 
             elif action == Action.RAISE_3BB:
-                contribution = self.min_call + 3 * self.big_blind
+                contribution = 3 * self.big_blind - self.player_pots[self.current_player.seat]
                 self.raisers.append(self.current_player.seat)
 
             elif action == Action.RAISE_HALF_POT:
@@ -618,9 +618,8 @@ class HoldemTable(Env):
             self.legal_moves.append(Action.CALL)
             self.legal_moves.append(Action.FOLD)
 
-        if self.player_cycle.is_raising_allowed():
-            if self.current_player.stack >= (self.min_call + 3 * self.big_blind) >= self.min_call:
-                self.legal_moves.append(Action.RAISE_3BB)
+        if self.current_player.stack >= 3 * self.big_blind - self.player_pots[self.current_player.seat]:
+            self.legal_moves.append(Action.RAISE_3BB)
 
             if self.current_player.stack >= ((self.community_pot + self.current_round_pot) / 2) >= self.min_call:
                 self.legal_moves.append(Action.RAISE_HALF_POT)
