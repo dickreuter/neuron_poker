@@ -832,10 +832,6 @@ class PlayerCycle:
         """Set the index to a specific player"""
         self.idx = idx
 
-    def set_idx(self, idx):
-        """Set the index to a specific player"""
-        self.player_index = idx
-
     def deactivate_player(self, idx):
         """Deactivate a pleyr if he has folded or is out of cash."""
         assert self.can_still_make_moves_in_this_hand[idx], "Already deactivated"
@@ -861,8 +857,8 @@ class PlayerCycle:
 
     def mark_out_of_cash_but_contributed(self):
         """Mark current player as a raiser or caller, but is out of cash."""
-        self.out_of_cash_but_contributed[self.player_index] = True
-        self.deactivate_current(self.player_index)
+        self.out_of_cash_but_contributed[self.idx] = True
+        self.deactivate_current()
 
     def mark_bb(self):
         """Ensure bb can raise"""
