@@ -225,11 +225,165 @@ class PlayerForTest:
         self.name = name
         self.agent_obj = None
 
-    @staticmethod
-    def action(action, observation, info):
-        """Perform action."""
-        _ = (observation, info)
-        return action
+
+def test_call_all_in_with_not_enough_stack_is_not_allowed():
+    """Bug description: Player with a stack of 100 goes allin. The player after that calls this,
+    but he has only a stack of 1. In a case like this the remaining stack was negative. Call is not allowed in a
+    situation like that, because player has not enough chips he can only go all in. This test check if the bug is solved
+     or not."""
+    env = _create_env(2)  # bet small blind and big blind
+    env.players[0].stack = 1  # seat 0 big blind has a remaining stack of 1
+    env.step(Action.ALL_IN)  # seat 0  small blind goes all in
+
+    assert Action.CALL not in env.legal_moves
+
+
+def test_one_side_pot_three_possible_winners():
+    """Test checks all possibilities of one side pot.
+    Loop is required to get all possibilities, because cards on table and winner is every time different"""
+    winner_index_checked = np.array([False, False, False])
+    while winner_index_checked.sum() != 3:
+        env = _create_env(3)  # bet small blind and big blind
+        env.players[0].stack = 50  # seat 0
+
+        env.step(Action.ALL_IN)  # seat 0 goes all in
+        env.step(Action.ALL_IN)  # seat 1 small blind calls
+        env.step(Action.CALL)  # seat 2 big blind calls
+
+        if env.winner_index[0] == 0:
+            assert env.stage == Stage.PREFLOP  # new hand started, because 2 player left the reason for this
+            # behaviour is the side-pot
+            assert env.players[0].stack == 149  # main pot (150) - new small blind (1) = 149
+            assert env.players[env.winner_index[1]].stack == 98  # side pot (100) - new big blind (2) = 98
+            winner_index_checked[env.winner_index] = True
+        elif env.winner_index[0] == 1:
+            assert env.stage == Stage.SHOWDOWN
+            assert env.players[1].stack == 250
+            assert env.players[0].stack == 0
+            assert env.players[2].stack == 0
+            winner_index_checked[env.winner_index] = True
+        elif env.winner_index[0] == 2:
+            assert env.stage == Stage.SHOWDOWN
+            assert env.players[2].stack == 250
+            assert env.players[1].stack == 0
+            assert env.players[0].stack == 0
+            winner_index_checked[env.winner_index] = True
+        else:
+            assert False
+
+
+def test_two_side_pots_check_4_cases():
+    """Test checks all cases of two side pots.
+    Loop is required to get all possibilities, because cards on table and winner is every time different"""
+    winner_index_checked = np.array([False, False, False, False])
+    while winner_index_checked.sum() != 4:
+        env = _create_env(4)  # bet small blind and big blind
+        env.players[0].stack = 50  # seat 0
+        env.players[3].stack = 25  # seat 3
+        env.step(Action.ALL_IN)  # seat 3 goes all in
+        env.step(Action.ALL_IN)  # seat 0 ALL_IN
+        env.step(Action.ALL_IN)  # seat 1 small blind ALL_IN
+        env.step(Action.CALL)  # seat 2 big blind ALL_IN
+
+        if env.winner_index[0] == 0:
+            assert env.stage == Stage.PREFLOP  # new hand started, because several players left the reason for this
+            # behaviour is the side-pot
+            assert env.players[0].stack == 174  # 100(main pot) + 75(1.side pot) - new small blind (1) because seat 1
+            # or 2 has dealer-button = 174
+            assert env.players[3].stack == 0  # seat 3 has smallest stack and seat 0 win already pot so stack = 0
+
+            if env.winner_index[1] == 1:
+                assert env.players[1].stack == 98  # 100 (start stack) - 25 (main pot) -25 (.side pot) + 50 (2.side pot
+                # main Pot) - big blind (2) =  73
+                assert env.players[2].stack == 0  # lose all by seat 3 and 1
+            elif env.winner_index[1] == 2:
+                assert env.players[2].stack == 98  # 100 (start stack) - 25 (main pot) -25 (.side pot) + 20 (2.side pot
+                # main Pot) - big blind (2) =  73
+                assert env.players[1].stack == 0  # lose all by seat 3 and 2
+            else:
+                assert False  # Only 4 players created in env
+            winner_index_checked[0] = True  # same case second winner seat 1 or 2
+
+        elif env.winner_index[0] == 1:
+            assert env.stage == Stage.SHOWDOWN
+            assert env.players[1].stack == 275
+            assert env.players[0].stack == 0
+            assert env.players[2].stack == 0
+            assert env.players[3].stack == 0
+            winner_index_checked[1] = True  # same case with index 1
+
+        elif env.winner_index[0] == 2:
+            assert env.stage == Stage.SHOWDOWN
+            assert env.players[2].stack == 275
+            assert env.players[1].stack == 0
+            assert env.players[0].stack == 0
+            assert env.players[3].stack == 0
+            winner_index_checked[1] = True  # same case with index 1
+
+        elif env.winner_index[0] == 3:
+            assert env.stage == Stage.PREFLOP  # new hand started, because several players left the reason for this
+            # behaviour is the side-pot
+            if env.winner_index[1] == 0:
+                assert env.players[0].stack == 73  # 50 (start stack) - 25 (1.main pot) + 50 (1. side pot) - new
+                # big blind (2)= 73
+                if env.winner_index[2] == 1:
+                    assert env.players[1].stack == 100  # 100 (start stack) - 25 (1.side_pot) + 25 (2.side pot) = 100
+                    assert env.players[3].stack == 99  # main pot (100) - new small blind (2) = 99
+                    assert env.players[2].stack == 0  # lose every pot
+                    winner_index_checked[2] = True  # same case with index 2
+                elif env.winner_index[2] == 2:
+                    assert env.players[2].stack == 100  # 100 (start stack) - 25 (1.side_pot) + 25 (2.side pot) = 100
+                    assert env.players[3].stack == 99  # main pot (100) - new small blind (2) = 99
+                    assert env.players[1].stack == 0  # lose every pot
+                    winner_index_checked[2] = True  # same case with index 2
+                else:
+                    assert False  # Only 4 players created in env
+
+            if env.winner_index[1] == 1:
+                assert env.players[1].stack == 173  # 100(start stack) + 175(side pot)- 100(main Pot) - new big
+                # blind(2) = 173
+                assert env.players[2].stack == 0  # lose all by seat 3 and 1
+                assert env.players[0].stack == 0  # lose all by seat 3 and 1
+                winner_index_checked[3] = True  # same case with index 3
+            elif env.winner_index[1] == 2:
+                assert env.players[2].stack == 173  # 100 (start stack) + 175 (side pot) - 100(main Pot)- new big
+                # blind(2) = 173
+                assert env.players[1].stack == 0  # lose all by seat 3 and 2
+                assert env.players[0].stack == 0  # lose all by seat 3 and 2
+                winner_index_checked[3] = True  # same case with index 3
+        else:
+            assert False  # Only 4 players created in env
+
+
+def test_three_side_pots_check_everytime_smallest_stack_winning_pot():
+    """Test three side pots everytime smallest stack wins the main pot or side pot"""
+    cases_tested_successful = np.array([False, False])
+    while cases_tested_successful.sum() != 2:
+        env = _create_env(5)  # bet small blind and big blind
+        env.players[0].stack = 60  # seat 0
+        env.players[3].stack = 20  # seat 3
+        env.players[4].stack = 40  # seat 4
+        env.step(Action.ALL_IN)  # seat 3 goes all in
+        env.step(Action.ALL_IN)  # seat 4 ALL_IN
+        env.step(Action.ALL_IN)  # seat 0 ALL_IN
+        env.step(Action.ALL_IN)  # seat 1 small blind ALL_IN
+        env.step(Action.CALL)  # seat 2 big blind ALL_IN
+
+        if env.winner_index[0] == 3:
+            assert env.stage == Stage.PREFLOP  # new hand started, because several players left the reason for this
+            # behaviour is the side-pot
+            assert env.players[3].stack == 99  # 5 * 20 - small blind (1 because dealer is 1 position before) = 99
+
+            if env.winner_index[1] == 4:
+                assert env.players[4].stack == 78  # 4 * 20 - big blind = 78
+                if env.winner_index[2] == 0:
+                    assert env.players[0].stack == 60  # 3 * 20 = 60
+                    if env.winner_index[3] == 1:
+                        assert env.players[1].stack == 80  # 2 * 40 = 80
+                        cases_tested_successful[0] = True
+                    if env.winner_index[3] == 2:
+                        assert env.players[2].stack == 80  # 2 * 40 = 80
+                        cases_tested_successful[1] = True
 
 
 @pytest.mark.skip("Values need to be updated and be presented as proportion of bb*100")
