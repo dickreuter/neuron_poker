@@ -65,13 +65,13 @@ class Action(Enum):
     FOLD = 0
     CHECK = 1
     CALL = 2
-    RAISE_3BB = 3
     RAISE_HALF_POT = 3
     RAISE_POT = 4
     RAISE_2POT = 5
     ALL_IN = 6
     SMALL_BLIND = 7
     BIG_BLIND = 8
+    RAISE_TO_3BB = 9
 
 
 class Stage(Enum):
@@ -339,8 +339,8 @@ class HoldemTable(Env):
                 contribution = 0
                 self.player_cycle.mark_checker()
 
-            elif action == Action.RAISE_3BB:
-                contribution = self.min_call + 3 * self.big_blind
+            elif action == Action.RAISE_TO_3BB:
+                contribution = 3 * self.big_blind - self.player_pots[self.current_player.seat]
                 self.raisers.append(self.current_player.seat)
 
             elif action == Action.RAISE_HALF_POT:
@@ -619,8 +619,8 @@ class HoldemTable(Env):
             self.legal_moves.append(Action.FOLD)
 
         if self.player_cycle.is_raising_allowed():
-            if self.current_player.stack >= (self.min_call + 3 * self.big_blind) >= self.min_call:
-                self.legal_moves.append(Action.RAISE_3BB)
+            if self.current_player.stack >= (3 * self.big_blind - self.player_pots[self.current_player.seat]) >= self.min_call:
+                self.legal_moves.append(Action.RAISE_TO_3BB)
 
             if self.current_player.stack >= ((self.community_pot + self.current_round_pot) / 2) >= self.min_call:
                 self.legal_moves.append(Action.RAISE_HALF_POT)

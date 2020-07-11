@@ -70,7 +70,7 @@ def test_one_player_raise3bb_one_call_this_call_is_last_action_in_round():
 
     env.step(Action.SMALL_BLIND)
     env.step(Action.BIG_BLIND)
-    env.step(Action.RAISE_3BB)
+    env.step(Action.RAISE_TO_3BB)
 
     assert env.stage == Stage.PREFLOP
 
@@ -87,7 +87,7 @@ def test_raise_to_3_times_big_blind_after_big_blind_bet():
     assert env.player_pots[0] == 2  # check bet of big blind by creation of environment
 
     env.step(Action.CALL)
-    env.step(Action.RAISE_3BB)
+    env.step(Action.RAISE_TO_3BB)
 
     assert env.player_pots[0] == 6  # raised to 3 times big blind like on Pokerstars
 
@@ -99,7 +99,7 @@ def test_raise_to_3_times_big_blind_is_not_possible_with_not_enough_remaining_st
     env.players[0].stack = 2
 
     env.step(Action.CALL)
-    assert Action.RAISE_3BB not in env.legal_moves
+    assert Action.RAISE_TO_3BB not in env.legal_moves
 
 
 def test_raise_to_3_times_big_blind_is_possible_with_enough_remaining_stack():
@@ -110,9 +110,9 @@ def test_raise_to_3_times_big_blind_is_possible_with_enough_remaining_stack():
 
     env.step(Action.CALL)
 
-    assert Action.RAISE_3BB in env.legal_moves
+    assert Action.RAISE_TO_3BB in env.legal_moves
 
-    env.step(Action.RAISE_3BB)
+    env.step(Action.RAISE_TO_3BB)
 
     assert env.players[0].stack == 0
 
