@@ -9,6 +9,7 @@ from gym_env.env import Action
 
 import tensorflow as tf
 import json
+import pickle
 
 from keras import Sequential
 from keras.models import model_from_json
@@ -47,6 +48,7 @@ class Player:
         self.autoplay = True
 
         self.dqn = None
+        self.memory = None
         self.model = None
         self.env = env
 
@@ -71,12 +73,12 @@ class Player:
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
-        memory = SequentialMemory(limit=memory_limit, window_length=window_length)
+        self.memory = SequentialMemory(limit=memory_limit, window_length=window_length)
         policy = TrumpPolicy()
 
         nb_actions = env.action_space.n
 
-        self.dqn = DQNAgent(model=self.model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
+        self.dqn = DQNAgent(model=self.model, nb_actions=nb_actions, memory=self.memory, nb_steps_warmup=nb_steps_warmup,
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
                             batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
@@ -107,6 +109,13 @@ class Player:
         # After training is done, we save the final weights.
         self.dqn.save_weights('dqn_{}_weights.h5'.format(env_name), overwrite=True)
 
+        mem = (self.memory,
+               self.memory.actions,
+               self.memory.rewards,
+               self.memory.terminals,
+               self.memory.observations)
+        pickle.dump(mem, open("dqn_{}_memory.pkl".format(env_name), "wb"), protocol=-1)
+
         # Finally, evaluate our algorithm for 5 episodes.
         self.dqn.test(self.env, nb_episodes=5, visualize=False)
 
@@ -120,9 +129,14 @@ class Player:
         self.model = model_from_json(dqn_json)
         self.model.load_weights('dqn_{}_weights.h5'.format(env_name))
 
+        (self.memory, self.memory.actions,
+         self.memory.rewards,
+         self.memory.terminals,
+         self.memory.observations) = pickle.load(open("dqn_{}_memory.pkl".format(env_name), "rb"))
+
     def play(self, nb_episodes=5, render=False):
         """Let the agent play"""
-        memory = SequentialMemory(limit=memory_limit, window_length=window_length)
+        self.memory = SequentialMemory(limit=memory_limit, window_length=window_length)
         policy = TrumpPolicy()
 
         class CustomProcessor(Processor):  # pylint: disable=redefined-outer-name
@@ -143,7 +157,7 @@ class Player:
 
         nb_actions = self.env.action_space.n
 
-        self.dqn = DQNAgent(model=self.model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
+        self.dqn = DQNAgent(model=self.model, nb_actions=nb_actions, memory=self.memory, nb_steps_warmup=nb_steps_warmup,
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
                             batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
