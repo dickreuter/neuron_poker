@@ -26,7 +26,7 @@ window_length = 1
 nb_max_start_steps = 1  # random action
 train_interval = 100  # train every 100 steps
 nb_steps_warmup = 50  # before training starts, should be higher than start steps
-nb_steps = 100000
+nb_steps = 1e5
 memory_limit = int(nb_steps / 2)
 batch_size = 500  # items sampled from memory to train
 enable_double_dqn = False
@@ -89,14 +89,14 @@ class Player:
         action = self.env.action_space.sample()
         return action
 
-    def train(self, env_name):
+    def train(self, env_name, steps=nb_steps):
         """Train a model"""
         # initiate training loop
         timestr = time.strftime("%Y%m%d-%H%M%S") + "_" + str(env_name)
         tensorboard = TensorBoard(log_dir='./Graph/{}'.format(timestr), histogram_freq=0, write_graph=True,
                                   write_images=False)
 
-        self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=nb_steps, visualize=False, verbose=2,
+        self.dqn.fit(self.env, nb_max_start_steps=nb_max_start_steps, nb_steps=steps, visualize=False, verbose=2,
                      start_step_policy=self.start_step_policy, callbacks=[tensorboard])
 
         # Save the architecture

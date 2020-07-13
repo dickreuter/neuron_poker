@@ -203,7 +203,7 @@ class SelfPlay:
 
         dqn = DQNPlayer()
         dqn.initiate_agent(env)
-        dqn.train(env_name=model_name)
+        dqn.train(env_name=model_name, steps=1e4)
 
     def dqn_play_keras_rl(self, model_name):
         """Create 6 players, one of them a trained DQN"""
