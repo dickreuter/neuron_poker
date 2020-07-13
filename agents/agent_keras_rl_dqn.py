@@ -20,7 +20,7 @@ from rl.memory import SequentialMemory
 from rl.agents import DQNAgent
 from rl.core import Processor
 
-autplay = True  # play automatically if played against keras-rl
+autoplay = True  # play automatically if played against keras-rl
 
 window_length = 1
 nb_max_start_steps = 1  # random action
