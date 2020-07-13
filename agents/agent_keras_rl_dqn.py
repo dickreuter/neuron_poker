@@ -207,7 +207,7 @@ class CustomProcessor(Processor):
 
     def process_action(self, action):
         """Find nearest legal action"""
-        if 'legal_moves_limit' in self.__dict__:
+        if 'legal_moves_limit' in self.__dict__ and self.legal_moves_limit is not None:
             self.legal_moves_limit = [move.value for move in self.legal_moves_limit]
             if action not in self.legal_moves_limit:
                 for i in range(5):
