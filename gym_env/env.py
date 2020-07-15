@@ -390,7 +390,7 @@ class HoldemTable(Env):
             pos = self.player_cycle.idx
             rnd = self.stage.value + self.second_round
             self.stage_data[rnd].calls[pos] = action == Action.CALL
-            self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT]
+            self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT, Action.RAISE_TO_3BB]
             self.stage_data[rnd].min_call_at_action[pos] = self.min_call / (self.big_blind * 100)
             self.stage_data[rnd].community_pot_at_action[pos] = self.community_pot / (self.big_blind * 100)
             self.stage_data[rnd].contribution[pos] += contribution / (self.big_blind * 100)
