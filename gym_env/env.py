@@ -68,10 +68,10 @@ class Action(Enum):
     RAISE_HALF_POT = 3
     RAISE_POT = 4
     RAISE_2POT = 5
-    ALL_IN = 6
-    SMALL_BLIND = 7
-    BIG_BLIND = 8
-    RAISE_TO_3BB = 9
+    RAISE_TO_3BB = 6
+    ALL_IN = 7
+    SMALL_BLIND = 8
+    BIG_BLIND = 9
 
 
 class Stage(Enum):
