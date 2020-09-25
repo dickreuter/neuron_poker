@@ -9,6 +9,6 @@ pyglet
 keras
 keras-rl
 docopt
-tensorflow==1.14
+tensorflow==1.15.4
 pybind11
 cppimport
