@@ -8,7 +8,6 @@ import numpy as np
 from gym_env.env import Action
 
 import tensorflow as tf
-from tensorflow.python.framework.ops import disable_eager_execution
 import json
 
 from tensorflow.keras.models import Sequential, model_from_json
@@ -57,7 +56,6 @@ class Player:
     def initiate_agent(self, env):
         """initiate a deep Q agent"""
         tf.compat.v1.disable_eager_execution()
-        disable_eager_execution()
 
         self.env = env
 

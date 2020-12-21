@@ -59,7 +59,7 @@ def command_line_parser():
         runner = SelfPlay(render=args['--render'], num_episodes=num_episodes,
                           use_cpp_montecarlo=args['--use_cpp_montecarlo'],
                           funds_plot=args['--funds_plot'],
-                          stack=args['--stack'])
+                          stack=int(args['--stack']))
 
         if args['random']:
             runner.random_agents()

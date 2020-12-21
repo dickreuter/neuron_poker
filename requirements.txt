@@ -9,5 +9,6 @@ pyglet
 keras-rl2
 docopt
 tensorflow
+tensorboard
 pybind11
 cppimport

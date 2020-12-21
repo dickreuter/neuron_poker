@@ -144,7 +144,8 @@ disable=print-statement,
         logging-fstring-interpolation,
         logging-not-lazy,
         R0801,
-        W0511
+        W0511,
+        raise-missing-from
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
