@@ -6,9 +6,8 @@ gym
 numpy
 matplotlib
 pyglet
-keras
-keras-rl
+keras-rl2
 docopt
-tensorflow==1.14
+tensorflow
 pybind11
 cppimport

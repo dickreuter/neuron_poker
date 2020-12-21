@@ -1,6 +1,6 @@
 """manual keypress agent"""
-from keras import Sequential
-from keras.layers import Dense, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
 from rl.memory import SequentialMemory
 
 from agents.agent_keras_rl_dqn import TrumpPolicy, memory_limit, window_length

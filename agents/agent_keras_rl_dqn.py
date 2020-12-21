@@ -8,12 +8,13 @@ import numpy as np
 from gym_env.env import Action
 
 import tensorflow as tf
+from tensorflow.python.framework.ops import disable_eager_execution
 import json
 
-from keras import Sequential
-from keras.models import model_from_json
-from keras.callbacks import TensorBoard
-from keras.layers import Dense, Dropout
+from tensorflow.keras.models import Sequential, model_from_json
+from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.optimizers import Adam
 
 from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
@@ -56,6 +57,8 @@ class Player:
     def initiate_agent(self, env):
         """initiate a deep Q agent"""
         tf.compat.v1.disable_eager_execution()
+        disable_eager_execution()
+
         self.env = env
 
         nb_actions = self.env.action_space.n
@@ -80,7 +83,7 @@ class Player:
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
                             batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
-        self.dqn.compile(tf.keras.optimizers.Adam(lr=1e-3), metrics=['mae'])
+        self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
     def start_step_policy(self, observation):
         """Custom policy for random decisions for warm up."""
@@ -147,7 +150,7 @@ class Player:
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
                             batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
-        self.dqn.compile(tf.optimizers.Adam(lr=1e-3), metrics=['mae'])  # pylint: disable=no-member
+        self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])  # pylint: disable=no-member
 
         self.dqn.test(self.env, nb_episodes=nb_episodes, visualize=render)
 
