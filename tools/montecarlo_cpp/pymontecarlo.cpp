@@ -1,5 +1,5 @@
 <%
-cfg['compiler_args'] = ['-std=c++14']
+cfg['compiler_args'] = ['/std:c++17']
 setup_pybind11(cfg)
 cfg['sources'] = ['Montecarlo.cpp']
 %>
