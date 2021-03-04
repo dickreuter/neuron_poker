@@ -182,7 +182,7 @@ class SelfPlay:
     def dqn_train_keras_rl(self, model_name):
         """Implementation of kreras-rl deep q learing."""
         from agents.agent_consider_equity import Player as EquityPlayer
-        from agents.agent_keras_rl_dqn import Player as DQNPlayer
+        from agents.dqn_agent import Player as DQNPlayer
         from agents.agent_random import Player as RandomPlayer
         env_name = 'neuron_poker-v0'
         env = gym.make(env_name, initial_stacks=self.stack, funds_plot=self.funds_plot, render=self.render,
@@ -206,7 +206,7 @@ class SelfPlay:
     def dqn_play_keras_rl(self, model_name):
         """Create 6 players, one of them a trained DQN"""
         from agents.agent_consider_equity import Player as EquityPlayer
-        from agents.agent_keras_rl_dqn import Player as DQNPlayer
+        from agents.dqn_agent import Player as DQNPlayer
         from agents.agent_random import Player as RandomPlayer
         env_name = 'neuron_poker-v0'
         self.env = gym.make(env_name, initial_stacks=self.stack, render=self.render)
