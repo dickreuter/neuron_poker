@@ -193,13 +193,13 @@ class SelfPlay:
 
         np.random.seed(123)
         env.seed(123)
-        self.env.add_player(EquityPlayer(name='equity/40/50_1', min_call_equity=.4, min_bet_equity=.5))
-        self.env.add_player(EquityPlayer(name='equity/40/50_2', min_call_equity=.4, min_bet_equity=.5))
-        self.env.add_player(EquityPlayer(name='equity/40/50_3', min_call_equity=.4, min_bet_equity=.5))
-        self.env.add_player(EquityPlayer(name='equity/40/50_4', min_call_equity=.4, min_bet_equity=.5))
-        self.env.add_player(EquityPlayer(name='equity/40/50_5', min_call_equity=.4, min_bet_equity=.5))
-        self.env.add_player(EquityPlayer(name='equity/40/50_6', min_call_equity=.4, min_bet_equity=.5))
-        self.env.add_player(PlayerShell(name='keras-rl', stack_size=self.stack))
+        env.add_player(EquityPlayer(name='equity/40/50_1', min_call_equity=.4, min_bet_equity=.5))
+        env.add_player(EquityPlayer(name='equity/40/50_2', min_call_equity=.4, min_bet_equity=.5))
+        env.add_player(EquityPlayer(name='equity/40/50_3', min_call_equity=.4, min_bet_equity=.5))
+        env.add_player(EquityPlayer(name='equity/40/50_4', min_call_equity=.4, min_bet_equity=.5))
+        env.add_player(EquityPlayer(name='equity/40/50_5', min_call_equity=.4, min_bet_equity=.5))
+        env.add_player(EquityPlayer(name='equity/40/50_6', min_call_equity=.4, min_bet_equity=.5))
+        env.add_player(PlayerShell(name='keras-rl', stack_size=self.stack))
 
         env.reset()
 
