@@ -80,7 +80,8 @@ class Player:
         self.dqn = DQNAgent(model=self.model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
-                            batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
+                            batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn,
+                            enable_dueling_network=True)
         self.dqn.compile(Adam(lr=1e-3), metrics=['mse'])
 
     def start_step_policy(self, observation):
