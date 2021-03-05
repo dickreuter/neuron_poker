@@ -30,6 +30,7 @@ nb_steps = 100000
 memory_limit = int(nb_steps / 2)
 batch_size = 128  # items sampled from memory to train
 enable_double_dqn = False
+enable_dueling_dqn = True
 
 log = logging.getLogger(__name__)
 
@@ -81,8 +82,8 @@ class Player:
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
                             batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn,
-                            enable_dueling_network=True)
-        self.dqn.compile(Adam(lr=1e-3), metrics=['mse'])
+                            enable_dueling_network=enable_dueling_dqn)
+        self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
     def start_step_policy(self, observation):
         """Custom policy for random decisions for warm up."""
@@ -148,7 +149,8 @@ class Player:
         self.dqn = DQNAgent(model=self.model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=nb_steps_warmup,
                             target_model_update=1e-2, policy=policy,
                             processor=CustomProcessor(),
-                            batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn)
+                            batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn,
+                            enable_dueling_network=enable_dueling_dqn)
         self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])  # pylint: disable=no-member
 
         self.dqn.test(self.env, nb_episodes=nb_episodes, visualize=render)
