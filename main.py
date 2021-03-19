@@ -286,11 +286,11 @@ class SelfPlay:
         print(league_table)
         print(f"Best Player: {best_player}")
 
-    def sac_train(self, model_name):
-        from agents.agent_consider_equity import Player as EquityPlayer
-        from agents.SAC_agent import Player as SACPlayer
-
+    def create_env_sac():
         env_name = 'neuron_poker-v0'
+
+        self.env = gym.make(
+            env_name, initial_stacks=self.stack, render=self.render)
 
         env.add_player(EquityPlayer(name='equity/40/50_1',
                                     min_call_equity=.4, min_bet_equity=.5))
@@ -298,11 +298,12 @@ class SelfPlay:
 
         env.reset()
 
-        def env_fn(): return gym.make(env_name, initial_stacks=self.stack, funds_plot=self.funds_plot, render=self.render,
-                                      use_cpp_montecarlo=self.use_cpp_montecarlo)
+    def sac_train(self, model_name):
+        from agents.agent_consider_equity import Player as EquityPlayer
+        from agents.SAC_agent import Player as SACPlayer
 
         SAC = SACPlayer()
-        SAC.train(env_fn=env_fn)
+        SAC.train(env_fn=create_env_sac())
 
 
 if __name__ == '__main__':
