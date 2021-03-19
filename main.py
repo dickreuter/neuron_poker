@@ -302,11 +302,7 @@ class SelfPlay:
         env.reset()
 
         SAC = SACPlayer()
-        SAC.initiate_agent(env)
-        SAC.train(env_name=model_name)
-
-    def sac_play(self, model_name):
-        pass
+        SAC.train(env=env)
 
 
 if __name__ == '__main__':
