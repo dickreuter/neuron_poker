@@ -26,9 +26,9 @@ class Player:
         if load_model:
             self.load(load_model)
 
-    def train(self, env):
-
-        sac_tf1(env, actor_critic='pi', ac_kwargs={},
+    def train(self, env_fn):
+        # need to pass in function that can make copy of the env...
+        sac_tf1(env_fn, actor_critic='pi', ac_kwargs={},
                 seed=0, steps_per_epoch=4000, epochs=100, replay_size=1000000,
                 gamma=0.99, polyak=0.995, lr=0.001, alpha=0.2, batch_size=100,
                 start_steps=10000, update_after=1000, update_every=50,
