@@ -286,7 +286,7 @@ class SelfPlay:
         print(league_table)
         print(f"Best Player: {best_player}")
 
-    def sac_train(self):
+    def sac_train(self, model_name):
         from agents.agent_consider_equity import Player as EquityPlayer
         from agents.SAC_agent import Player as SACPlayer
 
