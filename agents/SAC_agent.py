@@ -1,10 +1,13 @@
 import tensorflow as tf
 import json
 
-from gym_env.end import Action
+import gym
+from gym_env.env import Action
 
 import spinup.utils.logx
 from spinup import sac_tf1
+
+import time
 
 
 class Player:
@@ -23,16 +26,21 @@ class Player:
         if load_model:
             self.load(load_model)
 
-    def initiate_agent(self, env):
+    def train(self, env_name):
+
         # not sure if this line is needed
         tf.compat.v1.disable_eager_execution()
 
-        self.env = env
+        # Prepare session
+        sess = tf.Session()
+        sess.run(tf.global_variables_initializer())
 
-        nb_actions = self.env.action_space.n
-
-    def train(self, env_name):
-        pass
+        sac_tf1(gym.make(env_name), actor_critic='pi', ac_kwargs={},
+                seed=0, steps_per_epoch=4000, epochs=100, replay_size=1000000,
+                gamma=0.99, polyak=0.995, lr=0.001, alpha=0.2, batch_size=100,
+                start_steps=10000, update_after=1000, update_every=50,
+                num_test_episodes=5, max_ep_len=1000, logger_kwargs={},
+                save_freq=1)
 
     def load(self, env_name):
         pass
