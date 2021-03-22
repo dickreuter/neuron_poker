@@ -70,6 +70,7 @@ class Player:
         self.model.add(Dense(512, activation='relu'))
         self.model.add(Dropout(0.2))
         self.model.add(Dense(nb_actions, activation='linear'))
+        self.model.get_layer(name='dense').name = 'dense_1'
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
