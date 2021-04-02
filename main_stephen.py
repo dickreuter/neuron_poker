@@ -8,8 +8,6 @@ Usage:
   main.py selfplay equity_improvement --improvemest_rounds=<> [options]
   main.py selfplay dqn_train [options]
   main.py selfplay dqn_play [options]
-  main.py selfplay sac_train [options]
-  main.py selfplay sac_play [options]
   main.py learn_table_scraping [options]
 
 options:
@@ -18,7 +16,10 @@ options:
   -c --use_cpp_montecarlo   use cpp implementation of equity calculator. Requires cpp compiler but is 500x faster
   -f --funds_plot           Plot funds at end of episode
   --log                     log file
+  --env=<>                  Name of the enviornment version being used
+  --players=<>              Type of players
   --name=<>                 Name of the saved model
+  --agent=<>                Agent to use
   --screenloglevel=<>       log level on screen
   --episodes=<>             number of episodes to play
   --stack=<>                starting stack for each player [default: 500].
@@ -32,9 +33,14 @@ import numpy as np
 import pandas as pd
 from docopt import docopt
 
+import importlib
+
 from gym_env.env import PlayerShell
 from tools.helper import get_config
 from tools.helper import init_logger
+
+from agents.agent_random import Player as RandomPlayer
+from agents.agent_consider_equity import Player as EquityPlayer
 
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -86,12 +92,6 @@ def command_line_parser():
         elif args['dqn_play']:
             runner.dqn_play_keras_rl(model_name)
 
-        elif args['sac_train']:
-            runner.sac_train(model_name)
-
-        elif args['sac_play']:
-            runner.sac_play(model_name)
-
     else:
         raise RuntimeError("Argument not yet implemented")
 
@@ -99,8 +99,11 @@ def command_line_parser():
 class SelfPlay:
     """Orchestration of playing against itself"""
 
-    def __init__(self, render, num_episodes, use_cpp_montecarlo, funds_plot, stack=500):
+    def __init__(self, render, num_episodes, use_cpp_montecarlo, funds_plot,
+                 model_name=None, agent=None, env_name='v0', mode='play',
+                 players=[], load=False, stack=500):
         """Initialize"""
+        # load, model_name, agent, player=[0], env_name='v0', play=False
         self.winner_in_episodes = []
         self.use_cpp_montecarlo = use_cpp_montecarlo
         self.funds_plot = funds_plot
@@ -109,6 +112,13 @@ class SelfPlay:
         self.num_episodes = num_episodes
         self.stack = stack
         self.log = logging.getLogger(__name__)
+        self.load = load
+        self.players = players
+        self.mode = mode
+        self.agent = agent
+        self.mode = mode
+        self.model_name = model_name
+        self.env_name = env_name
 
     def random_agents(self):
         """Create an environment with 6 random players"""
@@ -198,114 +208,38 @@ class SelfPlay:
                 betting[i] = np.mean([betting[i], betting[best_player]])
                 self.log.info(f"New betting for player {i} is {betting[i]}")
 
-    def dqn_train_keras_rl(self, model_name):
-        """Implementation of kreras-rl deep q learing."""
-        from agents.agent_consider_equity import Player as EquityPlayer
-        from agents.dqn_agent import Player as DQNPlayer
-        from agents.agent_random import Player as RandomPlayer
-        env_name = 'neuron_poker-v0'
+    def dqn_agent(self):
+        my_import = __import__('agent.'+self.agent, fromlist=['Player'])
+        Player = getattr(my_import, 'Player')
+
+        env_name = 'neuron_poker-' + self.env_name
         env = gym.make(env_name, initial_stacks=self.stack, funds_plot=self.funds_plot, render=self.render,
                        use_cpp_montecarlo=self.use_cpp_montecarlo)
+        np.random.seed(42)
+        env.seed(42)
 
-        np.random.seed(123)
-        env.seed(123)
-        env.add_player(EquityPlayer(name='equity/40/50_1',
-                       min_call_equity=.4, min_bet_equity=.5))
-        env.add_player(EquityPlayer(name='equity/40/50_2',
-                       min_call_equity=.4, min_bet_equity=.5))
-        env.add_player(EquityPlayer(name='equity/40/50_3',
-                       min_call_equity=.4, min_bet_equity=.5))
-        env.add_player(EquityPlayer(name='equity/40/50_4',
-                       min_call_equity=.4, min_bet_equity=.5))
-        env.add_player(EquityPlayer(name='equity/40/50_5',
-                       min_call_equity=.4, min_bet_equity=.5))
-        env.add_player(EquityPlayer(name='equity/40/50_6',
-                       min_call_equity=.4, min_bet_equity=.5))
-        env.add_player(PlayerShell(name='keras-rl', stack_size=self.stack))
+        for i, player_type in enumerate(self.players):
+            if player_type == 0:
+                self.env.add_player(RandomPlayer())
+            elif type(player_type) == tuple and len(player_type) == 2:
+                env.add_player(EquityPlayer(name='equity_' + i,
+                                            min_call_equity=player_type[0], min_bet_equity=[1]))
 
-        env.reset()
-
-        # don't think this has the capability to actually load a model
-        # might just be overriding. Potentially why results still suck?
-        dqn = DQNPlayer()
-        dqn.initiate_agent(env)
-        dqn.train(env_name=model_name)
-
-    def dqn_play_keras_rl(self, model_name):
-        """Create 6 players, one of them a trained DQN"""
-        from agents.agent_consider_equity import Player as EquityPlayer
-        from agents.dqn_agent import Player as DQNPlayer
-        from agents.agent_random import Player as RandomPlayer
-        env_name = 'neuron_poker-v0'
-        self.env = gym.make(
-            env_name, initial_stacks=self.stack, render=self.render)
-        self.env.add_player(EquityPlayer(
-            name='equity/50/50', min_call_equity=.5, min_bet_equity=.5))
-        self.env.add_player(EquityPlayer(
-            name='equity/50/80', min_call_equity=.8, min_bet_equity=.8))
-        self.env.add_player(EquityPlayer(
-            name='equity/70/70', min_call_equity=.7, min_bet_equity=.7))
-        self.env.add_player(EquityPlayer(
-            name='equity/20/30', min_call_equity=.2, min_bet_equity=.3))
-        self.env.add_player(RandomPlayer())
         self.env.add_player(PlayerShell(
             name='keras-rl', stack_size=self.stack))
 
         self.env.reset()
 
-        dqn = DQNPlayer(load_model=model_name, env=self.env)
-        dqn.play(nb_episodes=self.num_episodes, render=self.render)
+        if self.load == True:
+            agent = Player(load_model=self.model_name, env=self.env)
+        else:
+            agent = Player
 
-    def dqn_train_custom_q1(self):
-        """Create 6 players, 4 of them equity based, 2 of them random"""
-        from agents.agent_consider_equity import Player as EquityPlayer
-        from agents.agent_custom_q1 import Player as Custom_Q1
-        from agents.agent_random import Player as RandomPlayer
-        env_name = 'neuron_poker-v0'
-        self.env = gym.make(
-            env_name, initial_stacks=self.stack, render=self.render)
-        # self.env.add_player(EquityPlayer(name='equity/50/50', min_call_equity=.5, min_bet_equity=-.5))
-        # self.env.add_player(EquityPlayer(name='equity/50/80', min_call_equity=.8, min_bet_equity=-.8))
-        # self.env.add_player(EquityPlayer(name='equity/70/70', min_call_equity=.7, min_bet_equity=-.7))
-        self.env.add_player(EquityPlayer(
-            name='equity/20/30', min_call_equity=.2, min_bet_equity=-.3))
-        # self.env.add_player(RandomPlayer())
-        self.env.add_player(RandomPlayer())
-        self.env.add_player(RandomPlayer())
-        self.env.add_player(Custom_Q1(name='Deep_Q1'))
-
-        for _ in range(self.num_episodes):
-            self.env.reset()
-            self.winner_in_episodes.append(self.env.winner_ix)
-
-        league_table = pd.Series(self.winner_in_episodes).value_counts()
-        best_player = league_table.index[0]
-
-        print("League Table")
-        print("============")
-        print(league_table)
-        print(f"Best Player: {best_player}")
-
-    def create_env_sac(self):
-        from agents.agent_consider_equity import Player as EquityPlayer
-        env_name = 'neuron_poker-v0'
-
-        env = gym.make(
-            env_name, initial_stacks=self.stack, render=self.render)
-
-        env.add_player(EquityPlayer(name='equity/40/50_1',
-                                    min_call_equity=.4, min_bet_equity=.5))
-        env.add_player(PlayerShell(name='sac', stack_size=self.stack))
-
-        env.reset()
-
-        return env
-
-    def sac_train(self, model_name):
-        from agents.SAC_agent import Player as SACPlayer
-
-        SAC = SACPlayer()
-        SAC.train(env_fn=self.create_env_sac())
+        if self.mode == 'play':
+            agent.initiate_agent(env)
+            agent.train(env_name=self.model_name)
+        else:
+            agent.play(nb_episodes=self.num_episodes, render=self.render)
 
 
 if __name__ == '__main__':
