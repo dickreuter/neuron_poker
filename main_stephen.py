@@ -16,15 +16,14 @@ options:
   -c --use_cpp_montecarlo   use cpp implementation of equity calculator. Requires cpp compiler but is 500x faster
   -f --funds_plot           Plot funds at end of episode
   --log                     log file
-  --env=<>                  Name of the enviornment version being used
+  --env=<>                  Name of the enviornment version being used, 'v0' is
   --players=<>              Type of players
-  --save=<>                Name of the saved model
-  --agent=<>                Agent to use
+  --save=<>                 Name of the saved model
+  --agent=<>                Agent to use, 'name of agent file in agents/', ex dqn_agent
   --screenloglevel=<>       log level on screen
   --episodes=<>             number of episodes to play
   --stack=<>                starting stack for each player [default: 500].
-  --mode=<>                 whether to play or train
-  --load=<>                 whether to load a model
+  --load=<>                 whether to load a model, Bool, doesn't support extended training yet
 """
 
 import logging
@@ -72,7 +71,6 @@ def command_line_parser():
         num_episodes = 1 if not args['--episodes'] else int(args['--episodes'])
         agent = args['--agent'] if args['--agent'] else None
         players = eval(args['--players']) if args['--players'] else [0]
-        mode = args['--mode'] if args['--mode'] else 'play'
         load = args['--load'] if args['--load'] else False
         render = args['--render']
         use_cpp_montecarlo = args['--use_cpp_montecarlo']
@@ -82,7 +80,7 @@ def command_line_parser():
         runner = SelfPlay(render, num_episodes,
                           use_cpp_montecarlo,
                           funds_plot,
-                          model_name, agent, env_name, mode,
+                          model_name, agent, env_name,
                           players,
                           load,
                           stack=int(args['--stack']))
@@ -100,8 +98,11 @@ def command_line_parser():
             improvement_rounds = int(args['--improvement_rounds'])
             runner.equity_self_improvement(improvement_rounds)
 
-        elif args['dqn_train'] or args['dqn_play']:
-            runner.dqn_agent()
+        elif args['dqn_train']:
+            runner.dqn_agent('train')
+
+        elif args['dqn_play']:
+            runner.dqn_agent('play')
 
     else:
         raise RuntimeError("Argument not yet implemented")
@@ -111,10 +112,9 @@ class SelfPlay:
     """Orchestration of playing against itself"""
 
     def __init__(self, render, num_episodes, use_cpp_montecarlo, funds_plot,
-                 model_name, agent, env_name, mode,
+                 model_name, agent, env_name,
                  players, load, stack=500):
         """Initialize"""
-        # load, model_name, agent, player=[0], env_name='v0', play=False
         self.winner_in_episodes = []
         self.use_cpp_montecarlo = use_cpp_montecarlo
         self.funds_plot = funds_plot
@@ -126,7 +126,6 @@ class SelfPlay:
         self.players = players
         self.mode = mode
         self.agent = agent
-        self.mode = mode
         self.model_name = model_name
         self.env_name = env_name
         self.load = load
@@ -219,7 +218,7 @@ class SelfPlay:
                 betting[i] = np.mean([betting[i], betting[best_player]])
                 self.log.info(f"New betting for player {i} is {betting[i]}")
 
-    def dqn_agent(self):
+    def dqn_agent(self, mode):
         my_import = __import__('agents.'+self.agent, fromlist=['Player'])
         player = getattr(my_import, 'Player')
 
@@ -229,23 +228,25 @@ class SelfPlay:
         np.random.seed(42)
         self.env.seed(42)
 
-        for i, player_type in enumerate(self.players):
+        count = 1
+        for player_type in self.players:
             if player_type == 0:
                 self.env.add_player(RandomPlayer())
             elif type(player_type) == tuple and len(player_type) == 2:
-                self.env.add_player(EquityPlayer(name='equity_' + i,
-                                                 min_call_equity=player_type[0], min_bet_equity=[1]))
+                self.env.add_player(EquityPlayer(name='equity_' + str(count),
+                                                 min_call_equity=player_type[0], min_bet_equity=player_type[1]))
+                count += 1
 
         self.env.add_player(PlayerShell(
             name='keras-rl', stack_size=self.stack))
 
         self.env.reset()
 
-        if self.mode == 'train':
+        if mode == 'train':
             dqn = player()
             dqn.initiate_agent(self.env)
             dqn.train(env_name=self.model_name)
-        elif self.mode == 'play':
+        elif mode == 'play':
             dqn = player(load_model=self.model_name, env=self.env)
             dqn.play(nb_episodes=self.num_episodes, render=self.render)
 
