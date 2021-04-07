@@ -1,16 +1,16 @@
 """Random player"""
 import random
 
-from gym_env.env import Action
-
 autplay = True  # play automatically if played against keras-rl
 
 
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, name='Random'):
+    def __init__(self, env='neuron_poker-v0', name='Random'):
         """Initiaization of an agent"""
+        my_import = __import__('gym_env.'+env, fromlist=['Action'])
+        self.Action = getattr(my_import, 'Action')
         self.equity_alive = 0
         self.actions = []
         self.last_action_in_stage = ''
@@ -23,8 +23,9 @@ class Player:
         _ = observation  # not using the observation for random decision
         _ = info
 
-        this_player_action_space = {Action.FOLD, Action.CHECK, Action.CALL, Action.RAISE_POT, Action.RAISE_HALF_POT,
-                                    Action.RAISE_2POT}
-        possible_moves = this_player_action_space.intersection(set(action_space))
+        this_player_action_space = {self.Action.FOLD, self.Action.CHECK, self.Action.CALL, self.Action.RAISE_POT, self.Action.RAISE_HALF_POT,
+                                    self.Action.RAISE_2POT}
+        possible_moves = this_player_action_space.intersection(
+            set(action_space))
         action = random.choice(list(possible_moves))
         return action
