@@ -17,7 +17,7 @@ options:
   -f --funds_plot           Plot funds at end of episode
   --log                     log file
   --env=<>                  Name of the enviornment version being used, 'v0' is
-  --players=<>              Type of players
+  --players=<>              Type of players, [0,0,(.2,.3)] : 2 random and 1 .2/.3 equity player
   --save=<>                 Name of the saved model
   --agent=<>                Agent to use, 'name of agent file in agents/', ex dqn_agent
   --screenloglevel=<>       log level on screen
@@ -39,8 +39,8 @@ from gym_env.env import PlayerShell
 from tools.helper import get_config
 from tools.helper import init_logger
 
-from agents.agent_random import Player as RandomPlayer
 from agents.agent_consider_equity import Player as EquityPlayer
+from agents.agent_random import Player as RandomPlayer
 
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -124,7 +124,6 @@ class SelfPlay:
         self.stack = stack
         self.log = logging.getLogger(__name__)
         self.players = players
-        self.mode = mode
         self.agent = agent
         self.model_name = model_name
         self.env_name = env_name
@@ -231,7 +230,10 @@ class SelfPlay:
         count = 1
         for player_type in self.players:
             if player_type == 0:
-                self.env.add_player(RandomPlayer())
+                if self.env_name != 'v0':
+                    self.env.add_player(RandomPlayer('env_'+self.env_name[1]))
+                else:
+                    self.env.add_player(RandomPlayer('env'))
             elif type(player_type) == tuple and len(player_type) == 2:
                 self.env.add_player(EquityPlayer(name='equity_' + str(count),
                                                  min_call_equity=player_type[0], min_bet_equity=player_type[1]))
