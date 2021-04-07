@@ -5,8 +5,6 @@ import time
 
 import numpy as np
 
-from gym_env.env import Action
-
 import tensorflow as tf
 import json
 
@@ -63,18 +61,19 @@ class Player:
         nb_actions = self.env.action_space.n
 
         self.model = Sequential()
-        self.model.add(Dense(512, activation='relu', input_shape=env.observation_space))
+        self.model.add(Dense(512, activation='relu',
+                       input_shape=env.observation_space))
         self.model.add(Dropout(0.2))
         self.model.add(Dense(512, activation='relu'))
         self.model.add(Dropout(0.2))
         self.model.add(Dense(512, activation='relu'))
         self.model.add(Dropout(0.2))
         self.model.add(Dense(nb_actions, activation='linear'))
-        self.model.get_layer(name='dense').name = 'dense_1'
 
         # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
         # even the metrics!
-        memory = SequentialMemory(limit=memory_limit, window_length=window_length)
+        memory = SequentialMemory(
+            limit=memory_limit, window_length=window_length)
         policy = EpsGreedyQPolicy()
 
         nb_actions = env.action_space.n
@@ -109,7 +108,8 @@ class Player:
             json.dump(dqn_json, json_file)
 
         # After training is done, we save the final weights.
-        self.dqn.save_weights('dqn_{}_weights.h5'.format(env_name), overwrite=True)
+        self.dqn.save_weights(
+            'dqn_{}_weights.h5'.format(env_name), overwrite=True)
 
         # Finally, evaluate our algorithm for 5 episodes.
         self.dqn.test(self.env, nb_episodes=5, visualize=False)
@@ -126,7 +126,8 @@ class Player:
 
     def play(self, nb_episodes=5, render=False):
         """Let the agent play"""
-        memory = SequentialMemory(limit=memory_limit, window_length=window_length)
+        memory = SequentialMemory(
+            limit=memory_limit, window_length=window_length)
         policy = EpsGreedyQPolicy()
 
         class CustomProcessor(Processor):  # pylint: disable=redefined-outer-name
@@ -152,7 +153,8 @@ class Player:
                             processor=CustomProcessor(),
                             batch_size=batch_size, train_interval=train_interval, enable_double_dqn=enable_double_dqn,
                             enable_dueling_network=enable_dueling_dqn)
-        self.dqn.compile(Adam(lr=1e-3), metrics=['mae'])  # pylint: disable=no-member
+        self.dqn.compile(
+            Adam(lr=1e-3), metrics=['mae'])  # pylint: disable=no-member
 
         self.dqn.test(self.env, nb_episodes=nb_episodes, visualize=render)
 
@@ -185,10 +187,12 @@ class TrumpPolicy(BoltzmannQPolicy):
         q_values = q_values.astype('float64')
         nb_actions = q_values.shape[0]
 
-        exp_values = np.exp(np.clip(q_values / self.tau, self.clip[0], self.clip[1]))
+        exp_values = np.exp(np.clip(q_values / self.tau,
+                            self.clip[0], self.clip[1]))
         probs = exp_values / np.sum(exp_values)
         action = np.random.choice(range(nb_actions), p=probs)
-        log.info(f"Chosen action by keras-rl {action} - probabilities: {probs}")
+        log.info(
+            f"Chosen action by keras-rl {action} - probabilities: {probs}")
         return action
 
 
@@ -213,7 +217,8 @@ class CustomProcessor(Processor):
     def process_action(self, action):
         """Find nearest legal action"""
         if 'legal_moves_limit' in self.__dict__ and self.legal_moves_limit is not None:
-            self.legal_moves_limit = [move.value for move in self.legal_moves_limit]
+            self.legal_moves_limit = [
+                move.value for move in self.legal_moves_limit]
             if action not in self.legal_moves_limit:
                 for i in range(5):
                     action += i
