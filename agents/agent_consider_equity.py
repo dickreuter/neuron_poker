@@ -1,15 +1,15 @@
 """Random player"""
 
-from gym_env.env import Action
-
 autoplay = True  # play automatically if played against keras-rl
 
 
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, name='Random', min_call_equity=None, min_bet_equity=None):
+    def __init__(self, env='env', name='Random', min_call_equity=None, min_bet_equity=None):
         """Initiaization of an agent"""
+        my_import = __import__('gym_env.'+env, fromlist=['Action'])
+        self.Action = getattr(my_import, 'Action')
         self.equity_alive = 0
         self.name = name
 
@@ -26,25 +26,25 @@ class Player:
         incremen1 = .1
         increment2 = .2
 
-        if equity_alive > self.min_bet_equity + increment2 and Action.ALL_IN in action_space:
-            action = Action.ALL_IN
+        if equity_alive > self.min_bet_equity + increment2 and self.Action.ALL_IN in action_space:
+            action = self.Action.ALL_IN
 
-        elif equity_alive > self.min_bet_equity + incremen1 and Action.RAISE_2POT in action_space:
-            action = Action.RAISE_2POT
+        elif equity_alive > self.min_bet_equity + incremen1 and self.Action.RAISE_2POT in action_space:
+            action = self.Action.RAISE_2POT
 
-        elif equity_alive > self.min_bet_equity and Action.RAISE_POT in action_space:
-            action = Action.RAISE_POT
+        elif equity_alive > self.min_bet_equity and self.Action.RAISE_POT in action_space:
+            action = self.Action.RAISE_POT
 
-        elif equity_alive > self.min_bet_equity - incremen1 and Action.RAISE_HALF_POT in action_space:
-            action = Action.RAISE_HALF_POT
+        elif equity_alive > self.min_bet_equity - incremen1 and self.Action.RAISE_HALF_POT in action_space:
+            action = self.Action.RAISE_HALF_POT
 
-        elif equity_alive > self.min_call_equity and Action.CALL in action_space:
-            action = Action.CALL
+        elif equity_alive > self.min_call_equity and self.Action.CALL in action_space:
+            action = self.Action.CALL
 
-        elif Action.CHECK in action_space:
-            action = Action.CHECK
+        elif self.Action.CHECK in action_space:
+            action = self.Action.CHECK
 
         else:
-            action = Action.FOLD
+            action = self.Action.FOLD
 
         return action

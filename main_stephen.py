@@ -221,6 +221,10 @@ class SelfPlay:
         my_import = __import__('agents.'+self.agent, fromlist=['Player'])
         player = getattr(my_import, 'Player')
 
+        # from gym_env.env import PlayerShell
+        # if self.env_name != 'v0':
+        #     my_import = __import('gym_env.env'+'-', fromlist=['PlayerShell'])
+
         env_name = 'neuron_poker-' + self.env_name
         self.env = gym.make(env_name, initial_stacks=self.stack, funds_plot=self.funds_plot, render=self.render,
                             use_cpp_montecarlo=self.use_cpp_montecarlo)
@@ -228,14 +232,15 @@ class SelfPlay:
         self.env.seed(42)
 
         count = 1
+        env_path = 'env'
+        if self.env_name != 'v0':
+            env_path += '_' + self.env_name
+
         for player_type in self.players:
             if player_type == 0:
-                if self.env_name != 'v0':
-                    self.env.add_player(RandomPlayer('env_'+self.env_name[1]))
-                else:
-                    self.env.add_player(RandomPlayer('env'))
+                self.env.add_player(RandomPlayer(env_path))
             elif type(player_type) == tuple and len(player_type) == 2:
-                self.env.add_player(EquityPlayer(name='equity_' + str(count),
+                self.env.add_player(EquityPlayer(name='equity_' + str(count), env=env_path,
                                                  min_call_equity=player_type[0], min_bet_equity=player_type[1]))
                 count += 1
 
