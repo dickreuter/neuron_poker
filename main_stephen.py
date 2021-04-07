@@ -42,10 +42,6 @@ from tools.helper import init_logger
 from agents.agent_consider_equity import Player as EquityPlayer
 from agents.agent_random import Player as RandomPlayer
 
-import os
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 # pylint: disable=import-outside-toplevel
 
 

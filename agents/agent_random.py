@@ -7,7 +7,7 @@ autplay = True  # play automatically if played against keras-rl
 class Player:
     """Mandatory class with the player methods"""
 
-    def __init__(self, env='neuron_poker-v0', name='Random'):
+    def __init__(self, env='env', name='Random'):
         """Initiaization of an agent"""
         my_import = __import__('gym_env.'+env, fromlist=['Action'])
         self.Action = getattr(my_import, 'Action')
