@@ -221,9 +221,13 @@ class SelfPlay:
         my_import = __import__('agents.'+self.agent, fromlist=['Player'])
         player = getattr(my_import, 'Player')
 
-        # from gym_env.env import PlayerShell
-        # if self.env_name != 'v0':
-        #     my_import = __import('gym_env.env'+'-', fromlist=['PlayerShell'])
+        env_path = 'env'
+        if self.env_name != 'v0':
+            env_path += '_' + self.env_name
+
+        shell_import = __import__(
+            'gym_env.' + env_path, fromlist=['PlayerShell'])
+        PlayerShell_import = getattr(shell_import, 'PlayerShell')
 
         env_name = 'neuron_poker-' + self.env_name
         self.env = gym.make(env_name, initial_stacks=self.stack, funds_plot=self.funds_plot, render=self.render,
@@ -232,9 +236,6 @@ class SelfPlay:
         self.env.seed(42)
 
         count = 1
-        env_path = 'env'
-        if self.env_name != 'v0':
-            env_path += '_' + self.env_name
 
         for player_type in self.players:
             if player_type == 0:
@@ -244,7 +245,7 @@ class SelfPlay:
                                                  min_call_equity=player_type[0], min_bet_equity=player_type[1]))
                 count += 1
 
-        self.env.add_player(PlayerShell(
+        self.env.add_player(PlayerShell_import(
             name='keras-rl', stack_size=self.stack))
 
         self.env.reset()
