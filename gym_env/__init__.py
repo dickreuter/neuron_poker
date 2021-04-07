@@ -3,9 +3,3 @@ from gym.envs.registration import register
 
 register(id='neuron_poker-v0',
          entry_point='gym_env.env:HoldemTable')
-
-register(id='neuron_poker-v1',
-         entry_point='gym_env.env-v1:HoldemTable')
-
-register(id='neuron_poker-v2',
-         entry_point='gym_env.env-v2:HoldemTable')
