@@ -18,7 +18,7 @@ options:
   --log                     log file
   --env=<>                  Name of the enviornment version being used, 'v0' is
   --players=<>              Type of players, [0,0,(.2,.3)] : 2 random and 1 .2/.3 equity player
-  --save=<>                 Name of the saved model
+  --name=<>                 Name of the saved model
   --agent=<>                Agent to use, 'name of agent file in agents/', ex dqn_agent
   --screenloglevel=<>       log level on screen
   --episodes=<>             number of episodes to play
@@ -53,7 +53,7 @@ def command_line_parser():
     else:
         print("Using default log file")
         logfile = 'default'
-    model_name = args['--save'] if args['--save'] else 'dqn1'
+    model_name = args['--name'] if args['--name'] else 'dqn1'
     env_name = args['--env'] if args['--env'] else 'v0'
     screenloglevel = logging.INFO if not args['--screenloglevel'] else \
         getattr(logging, args['--screenloglevel'].upper())
