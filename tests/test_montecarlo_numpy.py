@@ -1,6 +1,7 @@
 """Test numpy based equity calculator"""
 import pytest
 
+from tools.helper import ON_CI
 from tools.montecarlo_numpy2 import numpy_montecarlo
 
 
@@ -10,7 +11,7 @@ def _runner(my_cards, cards_on_table, players, expected_result):
     assert equity == pytest.approx(expected_result, abs=1)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo1():
     """Montecarlo test"""
     my_cards = [['3H', '3S']]
@@ -20,7 +21,7 @@ def test_montecarlo1():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo2():
     """Montecarlo test"""
     my_cards = [['8H', '8D']]
@@ -30,7 +31,7 @@ def test_montecarlo2():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo3():
     """Montecarlo test"""
     my_cards = [['AS', 'KS']]
@@ -40,7 +41,7 @@ def test_montecarlo3():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo4():
     """Montecarlo test"""
     my_cards = [['AS', 'KS']]
@@ -50,7 +51,7 @@ def test_montecarlo4():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo5():
     """Montecarlo test"""
     my_cards = [['8S', 'TS']]
@@ -60,7 +61,7 @@ def test_montecarlo5():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo6():
     """Montecarlo test"""
     my_cards = [['8S', 'TS']]
@@ -70,7 +71,7 @@ def test_montecarlo6():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo7():
     """Montecarlo test"""
     my_cards = [['8S', '2S']]
@@ -80,7 +81,7 @@ def test_montecarlo7():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo8():
     """Montecarlo test"""
     my_cards = [['8S', 'TS']]
@@ -90,7 +91,7 @@ def test_montecarlo8():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo8b():
     """Montecarlo test"""
     my_cards = [['2C', 'QS']]
@@ -100,7 +101,7 @@ def test_montecarlo8b():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo9():
     """Montecarlo test"""
     my_cards = [['7H', '7S']]
@@ -110,7 +111,7 @@ def test_montecarlo9():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo10():
     """Montecarlo test"""
     my_cards = [['3S', 'QH']]
@@ -120,7 +121,7 @@ def test_montecarlo10():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo11():
     """Montecarlo test"""
     my_cards = [['5C', 'JS']]
@@ -130,7 +131,7 @@ def test_montecarlo11():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo12():
     """Montecarlo test"""
     my_cards = [['TC', 'TH']]
@@ -140,7 +141,7 @@ def test_montecarlo12():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo13():
     """Montecarlo test"""
     my_cards = [['JH', 'QS']]
@@ -150,7 +151,7 @@ def test_montecarlo13():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo14():
     """Montecarlo test"""
     my_cards = [['2H', '8S']]
@@ -160,7 +161,7 @@ def test_montecarlo14():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo15():
     """Montecarlo test"""
     my_cards = [['KD', 'KS']]
@@ -170,7 +171,7 @@ def test_montecarlo15():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo16():
     """Montecarlo test"""
     my_cards = [['5H', 'KD']]
@@ -180,7 +181,7 @@ def test_montecarlo16():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo17():
     """Montecarlo test"""
     my_cards = [['JD', 'JS']]
@@ -190,7 +191,7 @@ def test_montecarlo17():
     _runner(my_cards, cards_on_table, players, expected_results)
 
 
-@pytest.mark.skip("Failing")
+@pytest.mark.skipif(ON_CI, reason='currently failing, needs repair')
 def test_montecarlo19():
     """Montecarlo test"""
     my_cards = [['TD', '7D']]
