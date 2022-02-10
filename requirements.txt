@@ -8,7 +8,7 @@ matplotlib
 pyglet
 keras-rl2
 docopt
-tensorflow==2.3.2
+tensorflow==2.5.3
 tensorboard
 pybind11
 cppimport
