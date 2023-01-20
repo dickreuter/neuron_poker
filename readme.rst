@@ -93,7 +93,7 @@ Agents
 - [x] Random agent
 - [x] Equity based strategy (i.e. call and bet above threshold)
 - [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
-- [x] C++ imlementation of equity calculator to significantly speed up runs
+- [x] C++ implementation of equity calculator to significantly speed up runs
 - [x] Agent based on reinforcement learning with experience replay (Deep Q learning, based on keras-rl)
 - [/] Custom agents (see above section for more details)
 
