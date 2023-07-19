@@ -2,10 +2,10 @@ pandas
 pytest
 pylint
 pydocstyle
-gym
+gym==0.23.0
 numpy
 matplotlib
-pyglet
+pyglet==1.5.11
 keras-rl2
 docopt
 tensorflow==2.3.2
