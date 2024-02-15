@@ -10,15 +10,17 @@ Usage:
 
 Run:
 
-- Install Anaconda, I would also recommend to install pycharm.
-- Create a virtual environment with ``conda create -n neuron_poker python=3.7``
-- Activate it with ``conda activate neuron_poker``, then install all required packages with ``pip install -r requirements.txt``
+- Install Python 3.11, I would also recommend to install PyCharm.
+- Install Poetry with ``curl -sSL https://install.python-poetry.org | python3 -``
+- Create a virtual environment with ``poetry env use python3.11``
+- Activate it with ``poetry shell``
+- Install all required packages with ``poetry install``
 - Run 6 random players playing against each other:
-  ``main.py selfplay random --render`` or
-- To manually control the players:``main.py selfplay keypress --render``
-- Example of genetic algorighm with self improvement: ``main.py selfplay equity_improvement --improvement_rounds=20 --episodes=10``
-- In order to use the c++ version of the equity calculator, you will also need to install visual studio 2019 (or gcc over cygwin may work as well). To use it, use the -c option when running main.py.
-- For more advanced users: ``main.py selfplay dqn_train -c`` will start training the deep Q agent with c++ montecarlo for faster calculation
+  ``poetry run python main.py selfplay random --render`` or
+- To manually control the players:``poetry run python main.py selfplay keypress --render``
+- Example of genetic algorithm with self improvement: ``poetry run python main.py selfplay equity_improvement --improvement_rounds=20 --episodes=10``
+- In order to use the C++ version of the equity calculator, you will also need to install Visual Studio 2019 (or GCC over Cygwin may work as well). To use it, use the -c option when running main.py.
+- For more advanced users: ``poetry run python main.py selfplay dqn_train -c`` will start training the deep Q agent with C++ Monte Carlo for faster calculation
 
 .. figure:: doc/table.gif
    :alt:
