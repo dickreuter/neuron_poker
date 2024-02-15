@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "neuron-poker"
+version = "0.1.0"
+description = ""
+authors = ["Nicolas Dickreuter <dickreuter@gmail.com>"]
+readme = "readme.rst"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.2.0"
+pytest = "^8.0.0"
+pylint = "^3.0.3"
+gym = "0.23.0"
+pyglet = "1.5.11"
+pybind11 = "^2.11.1"
+cppimport = "^22.8.2"
+docopt = "^0.6.2"
+pydocstyle = "^6.3.0"
+matplotlib = "^3.8.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
