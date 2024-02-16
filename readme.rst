@@ -14,7 +14,7 @@ Run:
 - Install Poetry with ``curl -sSL https://install.python-poetry.org | python3 -``
 - Create a virtual environment with ``poetry env use python3.11``
 - Activate it with ``poetry shell``
-- Install all required packages with ``poetry install``
+- Install all required packages with ``poetry install --no-root``
 - Run 6 random players playing against each other:
   ``poetry run python main.py selfplay random --render`` or
 - To manually control the players:``poetry run python main.py selfplay keypress --render``

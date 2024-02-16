@@ -168,6 +168,11 @@ class HoldemTable(Env):
         self.funds_history = pd.DataFrame()
         self.first_action_for_hand = [True] * len(self.players)
 
+        if not self.players:
+            log.warning("No agents added. Add agents before resetting the environment.")
+            return
+
+
         for player in self.players:
             player.stack = self.initial_stacks
 

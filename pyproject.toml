@@ -17,6 +17,7 @@ cppimport = "^22.8.2"
 docopt = "^0.6.2"
 pydocstyle = "^6.3.0"
 matplotlib = "^3.8.2"
+mpld3 = "^0.5.10"
 
 
 [build-system]
