@@ -114,6 +114,6 @@ def _calc_score(hand):
         hand_type = "HighCard"
         card_ranks = card_ranks[:5]
     else:
-        raise Exception('Card Type error!')
+        raise Exception('Card Type error!')  # pylint: disable=broad-exception-raised
 
     return score, card_ranks, hand_type

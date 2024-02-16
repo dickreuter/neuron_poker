@@ -27,3 +27,5 @@ Graph/
 /EquityCalculatorMontecarlo.pdb
 /EquityCalculatorMontecarlo.pyd
 /python37.dll
+build/*
+.vscode/

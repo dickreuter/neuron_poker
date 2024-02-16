@@ -438,7 +438,6 @@ disable=raw-checker-failed,
         too-many-return-statements,
         too-few-public-methods,
         too-many-instance-attributes,
-        superfluos-parens,
         fixme,
         arguments-differ,
         too-many-branches,
@@ -448,6 +447,13 @@ disable=raw-checker-failed,
         too-many-locals,
         superfluous-parens,
         useless-option-value,
+        duplicate-code,
+        raise-missing-from,
+        inconsistent-return-statements,
+        unspecified-encoding,
+        too-many-statements,
+        consider-using-in,
+
 
 
 

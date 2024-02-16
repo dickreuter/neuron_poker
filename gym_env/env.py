@@ -89,7 +89,8 @@ class HoldemTable(Env):
     """Pokergame environment"""
 
     def __init__(self, initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
-                 max_raising_rounds=2, use_cpp_montecarlo=False):
+                 max_raising_rounds=2, use_cpp_montecarlo=False,
+                 max_steps_after_raiser=None):
         """
         The table needs to be initialized once at the beginning
 
@@ -101,6 +102,8 @@ class HoldemTable(Env):
             render (bool): render table after each move in graphical format
             funds_plot (bool): show plot of funds history at end of each episode
             max_raising_rounds (int): max raises per round per player
+            max_steps_after_raiser (int): max steps after raiser to end round. If None it will default to 2*len(players) - 1
+            use_cpp_montecarlo (bool): use cpp montecarlo for equity calculation
 
         """
         if use_cpp_montecarlo:
@@ -125,7 +128,7 @@ class HoldemTable(Env):
         self.last_player_pot = None
         self.viewer = None
         self.player_max_win = None  # used for side pots
-        self.second_round = False
+        self.round_number = 0
         self.last_caller = None
         self.last_raiser = None
         self.raisers = []
@@ -159,6 +162,8 @@ class HoldemTable(Env):
         self.action_space = Discrete(len(Action) - 2)
         self.first_action_for_hand = None
 
+        self.initial_max_steps_after_raiser = max_steps_after_raiser
+
     def reset(self):
         """Reset after game over."""
         self.observation = None
@@ -177,7 +182,10 @@ class HoldemTable(Env):
             player.stack = self.initial_stacks
 
         self.dealer_pos = 0
-        self.player_cycle = PlayerCycle(self.players, dealer_idx=-1, max_steps_after_raiser=len(self.players) - 1,
+        if not self.initial_max_steps_after_raiser:
+            self.initial_max_steps_after_raiser = len(self.players) - 1
+        self.player_cycle = PlayerCycle(self.players, dealer_idx=-1,
+                                        max_steps_after_raiser=self.initial_max_steps_after_raiser,
                                         max_steps_after_big_blind=len(self.players))
         self._start_new_hand()
         self._get_environment()
@@ -393,7 +401,7 @@ class HoldemTable(Env):
             self.player_max_win[self.current_player.seat] += contribution  # side pot
 
             pos = self.player_cycle.idx
-            rnd = self.stage.value + self.second_round
+            rnd = self.stage.value + self.round_number
             self.stage_data[rnd].calls[pos] = action == Action.CALL
             self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT]
             self.stage_data[rnd].min_call_at_action[pos] = self.min_call / (self.big_blind * 100)
@@ -750,7 +758,7 @@ class PlayerCycle:
         self.last_raiser = None
         self.step_counter = 0
         self.steps_for_blind_betting = 2
-        self.second_round = False
+        self.round_number = 0
         self.idx = 0
         self.dealer_idx = dealer_idx
         self.can_still_make_moves_in_this_hand = []  # if the player can still play in this round
@@ -771,7 +779,7 @@ class PlayerCycle:
     def new_round_reset(self):
         """Reset the state for the next stage: flop, turn or river"""
         self.step_counter = 0
-        self.second_round = False
+        self.round_number = 0
         self.idx = self.dealer_idx
         self.last_raiser_step = len(self.lst)
         self.checkers = 0
@@ -786,7 +794,7 @@ class PlayerCycle:
         self.step_counter += step
         self.idx %= len(self.lst)
         if self.step_counter > len(self.lst):
-            self.second_round = True
+            self.round_number += 1
         if self.max_steps_total and (self.step_counter >= self.max_steps_total):
             log.debug("Max steps total has been reached")
             return False
@@ -868,7 +876,7 @@ class PlayerCycle:
     def mark_bb(self):
         """Ensure bb can raise"""
         self.last_raiser_step = self.step_counter + len(self.lst)
-        self.max_steps_total = self.step_counter + len(self.lst) * 2
+        # self.max_steps_total = self.step_counter + len(self.lst) * 2
 
     def is_raising_allowed(self):
         """Check if raising is still allowed at this position"""
