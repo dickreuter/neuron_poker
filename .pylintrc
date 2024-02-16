@@ -442,6 +442,13 @@ disable=raw-checker-failed,
         fixme,
         arguments-differ,
         too-many-branches,
+        consider-using-f-string,
+        logging-format-interpolation,
+        logging-not-lazy,
+        too-many-locals,
+        superfluous-parens,
+        useless-option-value,
+
 
 
 # Enable the message, report, category or checker with the given id(s). You can
