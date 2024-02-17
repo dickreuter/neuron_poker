@@ -89,8 +89,7 @@ class HoldemTable(Env):
     """Pokergame environment"""
 
     def __init__(self, initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
-                 max_raising_rounds=2, use_cpp_montecarlo=False,
-                 max_steps_after_raiser=None):
+                 max_raises_per_player_round=2, use_cpp_montecarlo=False, raise_illegal_moves=False):
         """
         The table needs to be initialized once at the beginning
 
@@ -101,9 +100,7 @@ class HoldemTable(Env):
             big_blind (real)
             render (bool): render table after each move in graphical format
             funds_plot (bool): show plot of funds history at end of each episode
-            max_raising_rounds (int): max raises per round per player
-            max_steps_after_raiser (int): max steps after raiser to end round. If None it will default to 2*len(players) - 1
-            use_cpp_montecarlo (bool): use cpp montecarlo for equity calculation
+            max_raises_per_player_round (int): max raises per round per player
 
         """
         if use_cpp_montecarlo:
@@ -128,7 +125,7 @@ class HoldemTable(Env):
         self.last_player_pot = None
         self.viewer = None
         self.player_max_win = None  # used for side pots
-        self.round_number = 0
+        self.round_number_in_street = 0
         self.last_caller = None
         self.last_raiser = None
         self.raisers = []
@@ -144,7 +141,7 @@ class HoldemTable(Env):
         self.initial_stacks = initial_stacks
         self.acting_agent = None
         self.funds_plot = funds_plot
-        self.max_round_raising = max_raising_rounds
+        self.max_raises_per_player_round = max_raises_per_player_round
 
         # pots
         self.community_pot = 0
@@ -162,7 +159,7 @@ class HoldemTable(Env):
         self.action_space = Discrete(len(Action) - 2)
         self.first_action_for_hand = None
 
-        self.initial_max_steps_after_raiser = max_steps_after_raiser
+        self.raise_illegal_moves = raise_illegal_moves
 
     def reset(self):
         """Reset after game over."""
@@ -177,16 +174,14 @@ class HoldemTable(Env):
             log.warning("No agents added. Add agents before resetting the environment.")
             return
 
-
         for player in self.players:
             player.stack = self.initial_stacks
 
         self.dealer_pos = 0
-        if not self.initial_max_steps_after_raiser:
-            self.initial_max_steps_after_raiser = len(self.players) - 1
-        self.player_cycle = PlayerCycle(self.players, dealer_idx=-1,
-                                        max_steps_after_raiser=self.initial_max_steps_after_raiser,
-                                        max_steps_after_big_blind=len(self.players))
+        max_steps_after_raiser = (self.max_raises_per_player_round - 1) * len(self.players) - 1
+        self.player_cycle = PlayerCycle(self.players, dealer_idx=-1, max_steps_after_raiser=max_steps_after_raiser,
+                                        max_steps_after_big_blind=len(self.players),
+                                        max_raises_per_player_round=self.max_raises_per_player_round)
         self._start_new_hand()
         self._get_environment()
         # auto play for agents where autoplay is set
@@ -233,7 +228,7 @@ class HoldemTable(Env):
                     self.first_action_for_hand[self.acting_agent] = False
                     self._calculate_reward(action)
 
-            log.info(f"Previous action reward for seat {self.acting_agent}: {self.reward}")
+            log.debug(f"Previous action reward for seat {self.acting_agent}: {self.reward}")
         return self.array_everything, self.reward, self.done, self.info
 
     def _execute_step(self, action):
@@ -249,6 +244,8 @@ class HoldemTable(Env):
 
     def _illegal_move(self, action):
         log.warning(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
+        if self.raise_illegal_moves:
+            raise ValueError(f"{action} is an Illegal move, try again. Currently allowed: {self.legal_moves}")
         self.reward = self.illegal_move_reward
 
     def _agent_is_autoplay(self, idx=None):
@@ -355,25 +352,31 @@ class HoldemTable(Env):
             elif action == Action.RAISE_3BB:
                 contribution = 3 * self.big_blind - self.player_pots[self.current_player.seat]
                 self.raisers.append(self.current_player.seat)
+                self.current_player.num_raises_in_street[self.stage] += 1
 
             elif action == Action.RAISE_HALF_POT:
                 contribution = (self.community_pot + self.current_round_pot) / 2
                 self.raisers.append(self.current_player.seat)
+                self.current_player.num_raises_in_street[self.stage] += 1
 
             elif action == Action.RAISE_POT:
                 contribution = (self.community_pot + self.current_round_pot)
                 self.raisers.append(self.current_player.seat)
+                self.current_player.num_raises_in_street[self.stage] += 1
 
             elif action == Action.RAISE_2POT:
                 contribution = (self.community_pot + self.current_round_pot) * 2
                 self.raisers.append(self.current_player.seat)
+                self.current_player.num_raises_in_street[self.stage] += 1
 
             elif action == Action.ALL_IN:
                 contribution = self.current_player.stack
                 self.raisers.append(self.current_player.seat)
+                self.current_player.num_raises_in_street[self.stage] += 1
 
             elif action == Action.SMALL_BLIND:
                 contribution = np.minimum(self.small_blind, self.current_player.stack)
+
 
             elif action == Action.BIG_BLIND:
                 contribution = np.minimum(self.big_blind, self.current_player.stack)
@@ -401,7 +404,7 @@ class HoldemTable(Env):
             self.player_max_win[self.current_player.seat] += contribution  # side pot
 
             pos = self.player_cycle.idx
-            rnd = self.stage.value + self.round_number
+            rnd = self.stage.value + self.round_number_in_street
             self.stage_data[rnd].calls[pos] = action == Action.CALL
             self.stage_data[rnd].raises[pos] = action in [Action.RAISE_2POT, Action.RAISE_HALF_POT, Action.RAISE_POT]
             self.stage_data[rnd].min_call_at_action[pos] = self.min_call / (self.big_blind * 100)
@@ -506,7 +509,7 @@ class HoldemTable(Env):
             log.info("")
             log.info("===Round: Stage: PREFLOP")
             # max steps total will be adjusted again at bb
-            self.player_cycle.max_steps_total = len(self.players) * self.max_round_raising + 2
+            self.player_cycle.max_steps_total = len(self.players) * self.max_raises_per_player_round
 
             self._next_player()
             self._process_decision(Action.SMALL_BLIND)
@@ -515,7 +518,7 @@ class HoldemTable(Env):
             self._next_player()
 
         elif self.stage in [Stage.FLOP, Stage.TURN, Stage.RIVER]:
-            self.player_cycle.max_steps_total = len(self.players) * self.max_round_raising
+            self.player_cycle.max_steps_total = len(self.players) * self.max_raises_per_player_round
 
             self._next_player()
 
@@ -631,8 +634,9 @@ class HoldemTable(Env):
             self.legal_moves.append(Action.CALL)
             self.legal_moves.append(Action.FOLD)
 
-        if self.current_player.stack >= 3 * self.big_blind - self.player_pots[self.current_player.seat]:
-            self.legal_moves.append(Action.RAISE_3BB)
+        if self.current_player.num_raises_in_street[self.stage] < self.max_raises_per_player_round:
+            if self.current_player.stack >= 3 * self.big_blind - self.player_pots[self.current_player.seat]:
+                self.legal_moves.append(Action.RAISE_3BB)
 
             if self.current_player.stack >= ((self.community_pot + self.current_round_pot) / 2) >= self.min_call:
                 self.legal_moves.append(Action.RAISE_HALF_POT)
@@ -746,7 +750,8 @@ class PlayerCycle:
     """Handle the circularity of the Table."""
 
     def __init__(self, lst, start_idx=0, dealer_idx=0, max_steps_total=None,
-                 last_raiser_step=None, max_steps_after_raiser=None, max_steps_after_big_blind=None):
+                 last_raiser_step=None, max_steps_after_raiser=None, max_steps_after_big_blind=None,
+                 max_raises_per_player_round=2):
         """Cycle over a list"""
         self.lst = lst
         self.start_idx = start_idx
@@ -758,7 +763,7 @@ class PlayerCycle:
         self.last_raiser = None
         self.step_counter = 0
         self.steps_for_blind_betting = 2
-        self.round_number = 0
+        self.round_number_in_street = 0
         self.idx = 0
         self.dealer_idx = dealer_idx
         self.can_still_make_moves_in_this_hand = []  # if the player can still play in this round
@@ -767,6 +772,7 @@ class PlayerCycle:
         self.new_hand_reset()
         self.checkers = 0
         self.folder = None
+        self.max_raises_per_player_round = max_raises_per_player_round
 
     def new_hand_reset(self):
         """Reset state if a new hand is dealt"""
@@ -779,7 +785,7 @@ class PlayerCycle:
     def new_round_reset(self):
         """Reset the state for the next stage: flop, turn or river"""
         self.step_counter = 0
-        self.round_number = 0
+        self.round_number_in_street = 0
         self.idx = self.dealer_idx
         self.last_raiser_step = len(self.lst)
         self.checkers = 0
@@ -794,9 +800,9 @@ class PlayerCycle:
         self.step_counter += step
         self.idx %= len(self.lst)
         if self.step_counter > len(self.lst):
-            self.round_number += 1
+            self.round_number_in_street += 1
         if self.max_steps_total and (self.step_counter >= self.max_steps_total):
-            log.debug("Max steps total has been reached")
+            log.info("Max steps total has been reached")
             return False
 
         if self.last_raiser:
@@ -876,7 +882,7 @@ class PlayerCycle:
     def mark_bb(self):
         """Ensure bb can raise"""
         self.last_raiser_step = self.step_counter + len(self.lst)
-        # self.max_steps_total = self.step_counter + len(self.lst) * 2
+        self.max_steps_total = self.step_counter + len(self.lst) * self.max_raises_per_player_round
 
     def is_raising_allowed(self):
         """Check if raising is still allowed at this position"""
@@ -908,3 +914,10 @@ class PlayerShell:
         self.temp_stack = []
         self.name = name
         self.agent_obj = None
+        self.num_raises_in_street = {Stage.PREFLOP: 0,
+                                     Stage.FLOP: 0,
+                                     Stage.TURN: 0,
+                                     Stage.RIVER: 0}
+
+    def __repr__(self):
+        return f"Player {self.name} at seat {self.seat} with stack of {self.stack} and cards {self.cards}"

@@ -5,14 +5,13 @@ from gym_env.env import HoldemTable, Action, Stage, PlayerCycle
 
 
 def _create_env(n_players,
-                initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
-                max_raising_rounds=2, max_steps_after_raiser=None,
+                initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=False,
+                max_raises_per_player_round=2,
                 use_cpp_montecarlo=False):
     """Create an environment"""
     env = HoldemTable(small_blind=small_blind, big_blind=big_blind, initial_stacks=initial_stacks,
-                      max_raising_rounds=max_raising_rounds,
-                      max_steps_after_raiser=max_steps_after_raiser,
-                      use_cpp_montecarlo=use_cpp_montecarlo)
+                      max_raises_per_player_round=max_raises_per_player_round,
+                      use_cpp_montecarlo=use_cpp_montecarlo, funds_plot=funds_plot, render=render)
 
     for _ in range(n_players):
         player = PlayerForTest()
@@ -41,7 +40,7 @@ def test_basic_actions_with_6_player():
     assert env.players[2].stack == 98
     assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_POT)  # big blind raises
-    assert env.player_cycle.round_number
+    assert env.player_cycle.round_number_in_street
     env.step(Action.FOLD)  # utg
     env.step(Action.CALL)  # 4 only remaining player calls
     assert env.stage == Stage.FLOP
@@ -102,8 +101,7 @@ def test_raise_to_3_times_big_blind_after_big_blind_bet():
 def test_raise_to_3_times_big_blind_is_not_possible_with_not_enough_remaining_stack():
     """1. Test raise to 3 times big blind is only possible with enough chips.
     See https://github.com/dickreuter/neuron_poker/issues/41"""
-    env = _create_env(2)  # bet small blind and big blind
-    env.players[0].stack = 2
+    env = _create_env(2, initial_stacks=2)  # bet small blind and big blind
 
     env.step(Action.CALL)
     assert Action.RAISE_3BB not in env.legal_moves
@@ -267,28 +265,12 @@ def test_call_proper_amount():
 
 def test_unlimited_raising_preflop():
     """Test raising unlimited preflop"""
-    env = _create_env(2, initial_stacks=100000, max_raising_rounds=100, max_steps_after_raiser=100)
-    env.step(Action.CALL)  # seat 3 utg
-    env.step(Action.RAISE_POT)  # seat 4
-    env.step(Action.CALL)  # seat 0 dealer
-    env.step(Action.RAISE_POT)  # seat 1 small blind
-    env.step(Action.CALL)  # seat 2 big blind
+    env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=3)
+    env.step(Action.CALL)  # sb
+    env.step(Action.RAISE_POT)  # bb raises
+    env.step(Action.CALL)  # sb
     assert env.stage == Stage.PREFLOP
-    env.step(Action.CALL)  # seat 3 utg
-    env.step(Action.RAISE_POT)  # seat 4
-    env.step(Action.CALL)  # seat 0 dealer
-    env.step(Action.RAISE_POT)  # seat 1 small blind
-    env.step(Action.CALL)  # seat 2 big blind
+    env.step(Action.RAISE_POT)  # bb raises
     assert env.stage == Stage.PREFLOP
-    env.step(Action.CALL)  # seat 3 utg
-    env.step(Action.RAISE_POT)  # seat 4
-    env.step(Action.CALL)  # seat 0 dealer
-    env.step(Action.RAISE_POT)  # seat 1 small blind
-    env.step(Action.CALL)  # seat 2 big blind
-    assert env.stage == Stage.PREFLOP
-    env.step(Action.CALL)  # seat 3 utg
-    env.step(Action.RAISE_POT)  # seat 4
-    env.step(Action.CALL)  # seat 0 dealer
-    env.step(Action.RAISE_POT)  # seat 1 small blind
-    env.step(Action.CALL)  # seat 2 big blind
-    assert env.stage == Stage.PREFLOP
+    env.step(Action.CALL)  # sb calls
+    assert env.stage == Stage.FLOP
