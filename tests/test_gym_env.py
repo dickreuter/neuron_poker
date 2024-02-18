@@ -101,7 +101,7 @@ def test_raise_to_3_times_big_blind_after_big_blind_bet():
 def test_raise_to_3_times_big_blind_is_not_possible_with_not_enough_remaining_stack():
     """1. Test raise to 3 times big blind is only possible with enough chips.
     See https://github.com/dickreuter/neuron_poker/issues/41"""
-    env = _create_env(2, initial_stacks=2)  # bet small blind and big blind
+    env = _create_env(4, initial_stacks=2)  # bet small blind and big blind
 
     env.step(Action.CALL)
     assert Action.RAISE_3BB not in env.legal_moves
