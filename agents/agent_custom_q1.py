@@ -6,6 +6,7 @@ from rl.memory import SequentialMemory
 from agents.agent_keras_rl_dqn import TrumpPolicy, memory_limit, window_length
 from gym_env import env
 
+# pylint: disable=import-error
 
 class Player:
     """Mandatory class with the player methods"""

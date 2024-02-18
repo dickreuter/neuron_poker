@@ -122,8 +122,7 @@ def test_raise_to_3_times_big_blind_is_possible_with_enough_remaining_stack():
     assert env.players[0].stack == 0
 
 
-@pytest.mark.skip("Test-scenario is not like title of the test and player_cycle.alive has by several executions a "
-                  "changed behaviour")
+
 def test_heads_up_after_flop():
     """All in at pre-flop leads to heads up after flop.
     For more info about skipping of this test see https://github.com/dickreuter/neuron_poker/issues/39.

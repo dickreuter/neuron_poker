@@ -1,5 +1,5 @@
 """Player based on a trained neural network"""
-# pylint: disable=wrong-import-order,invalid-name
+# pylint: disable=wrong-import-order,invalid-name,import-error,missing-function-docstring
 import logging
 import time
 

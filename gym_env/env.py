@@ -914,6 +914,7 @@ class PlayerShell:
         self.temp_stack = []
         self.name = name
         self.agent_obj = None
+        self.cards = None
         self.num_raises_in_street = {Stage.PREFLOP: 0,
                                      Stage.FLOP: 0,
                                      Stage.TURN: 0,
