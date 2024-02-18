@@ -3,8 +3,6 @@ import random
 
 from gym_env.env import Action
 
-autplay = True  # play automatically if played against keras-rl
-
 
 class Player:
     """Mandatory class with the player methods"""
