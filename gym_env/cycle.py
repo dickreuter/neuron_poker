@@ -1,5 +1,8 @@
-import numpy as np
+"""Cycle class that handles the low level logic of the game."""
+
 import logging
+
+import numpy as np
 
 # pylint: disable=import-outside-toplevel
 log = logging.getLogger(__name__)

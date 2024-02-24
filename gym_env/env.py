@@ -510,7 +510,7 @@ class HoldemTable(Env):
             log.info("")
             log.info("===Round: Stage: PREFLOP")
             # max steps total will be adjusted again at bb
-            self.player_cycle.max_steps_total = len(self.players) * self.max_raises_per_player_round
+            self.player_cycle.max_steps_total = len(self.players) * self.max_raises_per_player_round + 2
 
             self._next_player()
             self._process_decision(Action.SMALL_BLIND)
