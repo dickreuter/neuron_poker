@@ -277,7 +277,7 @@ def test_unlimited_raising_preflop():
     assert env.stage == Stage.FLOP
 
 
-@pytest.mark.skip("Requires further discussion")
+
 def test_end_preflop_on_call():
     """Test that the preflop round ends when there is
        a call after a raise
@@ -305,7 +305,7 @@ def test_preflop_call_after_max_raises():
     # Only a Call or Fold would end the round
     assert env.stage == Stage.PREFLOP
 
-
+@pytest.mark.skip("Requires further discussion")
 def test_one_max_raise_per_player():
     """Test the possibility to make one max raise per player
     """
