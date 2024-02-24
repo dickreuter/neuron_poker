@@ -1,7 +1,8 @@
 """Tests for the gym environment"""
 import pytest
 
-from gym_env.env import HoldemTable, Action, Stage, PlayerCycle
+from gym_env.env import HoldemTable, Action, Stage
+from gym_env.cycle import PlayerCycle
 
 
 def _create_env(n_players,
@@ -274,3 +275,39 @@ def test_unlimited_raising_preflop():
     assert env.stage == Stage.PREFLOP
     env.step(Action.CALL)  # sb calls
     assert env.stage == Stage.FLOP
+
+
+def test_end_preflop_on_call():
+    """Test that the preflop round ends when there is
+       a call after a raise
+    """
+    env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=3)
+    env.step(Action.CALL)  # sb
+    env.step(Action.RAISE_POT)  # bb raises
+    env.step(Action.CALL)  # sb
+    assert env.stage == Stage.FLOP
+
+
+def test_preflop_call_after_max_raises():
+    """Test that the preflop round ends when there is
+       a call after a raise
+    """
+    env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=2)
+    env.step(Action.CALL)  # sb
+    env.step(Action.RAISE_POT)  # bb raises
+    env.step(Action.RAISE_POT)  # sb raises
+    env.step(Action.RAISE_POT)  # bb raises
+    env.step(Action.RAISE_POT)  # sb raises
+
+    # Now we should still be in preflop, but raises are no longer legal actions
+    # Only a Call or Fold would end the round
+    assert env.stage == Stage.PREFLOP
+
+
+def test_one_max_raise_per_player():
+    """Test the possibility to make one max raise per player
+    """
+
+    env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=1)
+
+    assert env.stage == Stage.PREFLOP
