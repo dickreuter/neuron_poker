@@ -31,6 +31,7 @@ class PlayerCycle:
         self.checkers = 0
         self.folder = None
         self.max_raises_per_player_round = max_raises_per_player_round
+        self.max_remaining_steps_without_raising = len(self.alive)
 
     def new_hand_reset(self):
         """Reset state if a new hand is dealt"""
@@ -47,6 +48,7 @@ class PlayerCycle:
         self.idx = self.dealer_idx
         self.last_raiser_step = len(self.lst)
         self.checkers = 0
+        self.max_remaining_steps_without_raising = len(self.alive)
 
     def next_player(self, step=1):
         """Switch to the next player in the round."""
@@ -64,8 +66,11 @@ class PlayerCycle:
             return False
 
         if self.last_raiser:
-            raiser_reference = self.last_raiser
-            if self.max_steps_after_raiser and (self.step_counter > self.max_steps_after_raiser + raiser_reference):
+            if self.step_counter >= self.last_raiser + self.max_remaining_steps_without_raising:
+                log.info("Max steps without raising has been reached. For example all calls after raiser.")
+                return False
+
+            if self.max_steps_after_raiser and (self.step_counter > self.max_steps_after_raiser + self.last_raiser):
                 log.debug("max steps after raiser has been reached")
                 return False
         elif self.max_steps_after_raiser and \

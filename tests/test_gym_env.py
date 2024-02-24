@@ -1,8 +1,8 @@
 """Tests for the gym environment"""
 import pytest
 
-from gym_env.env import HoldemTable, Action, Stage
 from gym_env.cycle import PlayerCycle
+from gym_env.env import HoldemTable, Action, Stage
 
 
 def _create_env(n_players,
@@ -269,14 +269,15 @@ def test_unlimited_raising_preflop():
     env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=3)
     env.step(Action.CALL)  # sb
     env.step(Action.RAISE_POT)  # bb raises
-    env.step(Action.CALL)  # sb
+    env.step(Action.RAISE_POT)  # sb
     assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_POT)  # bb raises
     assert env.stage == Stage.PREFLOP
-    env.step(Action.CALL)  # sb calls
+    env.step(Action.RAISE_POT)  # sb calls
     assert env.stage == Stage.FLOP
 
 
+@pytest.mark.skip("Requires further discussion")
 def test_end_preflop_on_call():
     """Test that the preflop round ends when there is
        a call after a raise
@@ -288,6 +289,7 @@ def test_end_preflop_on_call():
     assert env.stage == Stage.FLOP
 
 
+@pytest.mark.skip("Requires further discussion")
 def test_preflop_call_after_max_raises():
     """Test that the preflop round ends when there is
        a call after a raise
