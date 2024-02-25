@@ -1,7 +1,7 @@
 """Random player"""
 import random
 
-from gym_env.env import Action
+from gym_env.enums import Action
 
 
 class Player:

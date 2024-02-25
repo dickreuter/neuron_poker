@@ -1,6 +1,5 @@
 """Groupier functions"""
 import logging
-from enum import Enum
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,6 +8,7 @@ from gym import Env
 from gym.spaces import Discrete
 
 from gym_env.cycle import PlayerCycle
+from gym_env.enums import Action, Stage
 from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
 from tools.hand_evaluator import get_winner
 from tools.helper import flatten
@@ -58,32 +58,6 @@ class PlayerData:
         self.equity_to_river_2plr = 0
         self.equity_to_river_3plr = 0
         self.stack = None
-
-
-class Action(Enum):
-    """Allowed actions"""
-
-    FOLD = 0
-    CHECK = 1
-    CALL = 2
-    RAISE_3BB = 3
-    RAISE_HALF_POT = 3
-    RAISE_POT = 4
-    RAISE_2POT = 5
-    ALL_IN = 6
-    SMALL_BLIND = 7
-    BIG_BLIND = 8
-
-
-class Stage(Enum):
-    """Allowed actions"""
-
-    PREFLOP = 0
-    FLOP = 1
-    TURN = 2
-    RIVER = 3
-    END_HIDDEN = 4
-    SHOWDOWN = 5
 
 
 class HoldemTable(Env):
@@ -385,7 +359,7 @@ class HoldemTable(Env):
             else:
                 raise RuntimeError("Illegal action.")
 
-            if contribution > self.min_call and not (action==Action.BIG_BLIND or action==Action.SMALL_BLIND):
+            if contribution > self.min_call and not (action == Action.BIG_BLIND or action == Action.SMALL_BLIND):
                 self.player_cycle.mark_raiser()
 
             self.current_player.stack -= contribution
