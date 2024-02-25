@@ -44,14 +44,15 @@ class PlayerCycle:
         self.folder = [False] * len(self.lst)
         self.step_counter = 0
 
-    def new_round_reset(self):
+    def new_street_reset(self):
         """Reset the state for the next stage: flop, turn or river"""
         self.step_counter = 0
         self.round_number_in_street = 0
         self.idx = self.dealer_idx
         self.last_raiser_step = len(self.lst)
         self.checkers = 0
-        self.max_remaining_steps_without_raising = len(self.alive)
+        self.max_remaining_steps_without_raising = len(self.alive) - 1
+        self.last_raiser = None
 
     def next_player(self, step=1):
         """Switch to the next player in the round."""
@@ -64,12 +65,12 @@ class PlayerCycle:
         self.idx %= len(self.lst)
         if self.step_counter > len(self.lst):
             self.round_number_in_street += 1
-        if self.max_steps_total and (self.step_counter >= self.max_steps_total):
+        if self.max_steps_total and (self.step_counter > self.max_steps_total):
             log.info("Max steps total has been reached")
             return False
 
         if self.last_raiser:
-            if self.step_counter >= self.last_raiser + self.max_remaining_steps_without_raising:
+            if self.step_counter > self.last_raiser + self.max_remaining_steps_without_raising:
                 log.info("Max steps without raising has been reached. For example all calls after raiser.")
                 return False
 
@@ -133,8 +134,7 @@ class PlayerCycle:
 
     def mark_raiser(self):
         """Mark a raise for the current player."""
-        if self.step_counter > 2:
-            self.last_raiser = self.step_counter
+        self.last_raiser = self.step_counter
 
     def mark_checker(self):
         """Counter the number of checks in the round"""
@@ -148,7 +148,7 @@ class PlayerCycle:
     def mark_bb(self):
         """Ensure bb can raise"""
         self.last_raiser_step = self.step_counter + len(self.lst)
-        self.max_steps_total = self.step_counter + len(self.lst) * self.max_raises_per_player_round
+        self.max_steps_total = self.step_counter + len(self.lst) * self.max_raises_per_player_round + 2
 
     def is_raising_allowed(self):
         """Check if raising is still allowed at this position"""

@@ -385,7 +385,7 @@ class HoldemTable(Env):
             else:
                 raise RuntimeError("Illegal action.")
 
-            if contribution > self.min_call:
+            if contribution > self.min_call and not (action==Action.BIG_BLIND or action==Action.SMALL_BLIND):
                 self.player_cycle.mark_raiser()
 
             self.current_player.stack -= contribution
@@ -504,7 +504,7 @@ class HoldemTable(Env):
         self.min_call = 0
         for player in self.players:
             player.last_action_in_stage = ''
-        self.player_cycle.new_round_reset()
+        self.player_cycle.new_street_reset()
 
         if self.stage == Stage.PREFLOP:
             log.info("")

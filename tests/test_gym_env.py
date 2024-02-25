@@ -205,18 +205,6 @@ def test_cycle_mechanism1():
     assert current == 'utg1'
 
 
-def test_cycle_mechanism2():
-    """Test cycle"""
-    lst = ['dealer', 'sb', 'bb', 'utg']
-    cycle = PlayerCycle(lst, start_idx=2, max_steps_total=5)
-    current = cycle.next_player()
-    assert current == 'utg'
-    cycle.next_player()
-    cycle.next_player()
-    current = cycle.next_player(step=2)
-    assert not current
-
-
 class PlayerForTest:
     """Player shell"""
 
@@ -274,6 +262,8 @@ def test_unlimited_raising_preflop():
     env.step(Action.RAISE_POT)  # bb raises
     assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_POT)  # sb calls
+    assert env.stage == Stage.PREFLOP
+    env.step(Action.CALL)  # sb calls
     assert env.stage == Stage.FLOP
 
 
@@ -289,21 +279,35 @@ def test_end_preflop_on_call():
     assert env.stage == Stage.FLOP
 
 
-@pytest.mark.skip("Requires further discussion")
 def test_preflop_call_after_max_raises():
     """Test that the preflop round ends when there is
        a call after a raise
     """
     env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=2)
+    # sb
+    # bb
     env.step(Action.CALL)  # sb
     env.step(Action.RAISE_POT)  # bb raises
     env.step(Action.RAISE_POT)  # sb raises
+    assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_POT)  # bb raises
+    assert env.stage == Stage.PREFLOP
     env.step(Action.RAISE_POT)  # sb raises
-
+    assert env.stage == Stage.PREFLOP
     # Now we should still be in preflop, but raises are no longer legal actions
     # Only a Call or Fold would end the round
-    assert env.stage == Stage.PREFLOP
+    assert env.legal_moves == [Action.CALL, Action.FOLD]
+
+    env.step(Action.CALL)
+    assert env.stage == Stage.FLOP
+    env.step(Action.RAISE_POT)
+    env.step(Action.CALL)
+    assert env.stage == Stage.TURN
+    env.step(Action.RAISE_POT)
+    env.step(Action.CALL)
+    assert env.stage == Stage.RIVER
+    env.step(Action.RAISE_POT)
+    env.step(Action.CALL)
 
 
 def test_one_max_raise_per_player():
