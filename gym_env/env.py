@@ -18,6 +18,7 @@ from tools.helper import flatten
 log = logging.getLogger(__name__)
 
 winner_in_episodes = []
+MONTEACRLO_RUNS = 1000  # relevant for equity calculation if switched on
 
 
 class CommunityData:
@@ -64,7 +65,7 @@ class HoldemTable(Env):
     """Pokergame environment"""
 
     def __init__(self, initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
-                 max_raises_per_player_round=2, use_cpp_montecarlo=False, raise_illegal_moves=False):
+                 max_raises_per_player_round=2, use_cpp_montecarlo=False, raise_illegal_moves=False, calculate_equity=False):
         """
         The table needs to be initialized once at the beginning
 
@@ -117,6 +118,7 @@ class HoldemTable(Env):
         self.acting_agent = None
         self.funds_plot = funds_plot
         self.max_raises_per_player_round = max_raises_per_player_round
+        self.calculate_equity = calculate_equity
 
         # pots
         self.community_pot = 0
@@ -253,6 +255,17 @@ class HoldemTable(Env):
             self.current_player = self.players[self.winner_ix]
 
         self.player_data.position = self.current_player.seat
+        if self.calculate_equity:
+            self.current_player.equity_alive = self.get_equity(set(self.current_player.cards), set(self.table_cards),
+                                                               sum(self.player_cycle.alive), MONTEACRLO_RUNS)
+            self.player_data.equity_to_river_2plr = self.get_equity(set(self.current_player.cards), set(self.table_cards),
+                                                                   sum(self.player_cycle.alive), MONTEACRLO_RUNS)
+            self.player_data.equity_to_river_3plr = self.get_equity(set(self.current_player.cards), set(self.table_cards),
+                                                                   sum(self.player_cycle.alive), MONTEACRLO_RUNS)
+        else:
+            self.current_player.equity_alive = np.nan
+            self.player_data.equity_to_river_2plr = np.nan
+            self.player_data.equity_to_river_3plr = np.nan
         self.current_player.equity_alive = self.get_equity(set(self.current_player.cards), set(self.table_cards),
                                                            sum(self.player_cycle.alive), 1000)
         self.player_data.equity_to_river_alive = self.current_player.equity_alive
