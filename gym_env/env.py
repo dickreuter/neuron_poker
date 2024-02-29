@@ -65,7 +65,8 @@ class HoldemTable(Env):
     """Pokergame environment"""
 
     def __init__(self, initial_stacks=100, small_blind=1, big_blind=2, render=False, funds_plot=True,
-                 max_raises_per_player_round=2, use_cpp_montecarlo=False, raise_illegal_moves=False, calculate_equity=False):
+                 max_raises_per_player_round=2, use_cpp_montecarlo=False, raise_illegal_moves=False,
+                 calculate_equity=False):
         """
         The table needs to be initialized once at the beginning
 
@@ -258,10 +259,12 @@ class HoldemTable(Env):
         if self.calculate_equity:
             self.current_player.equity_alive = self.get_equity(set(self.current_player.cards), set(self.table_cards),
                                                                sum(self.player_cycle.alive), MONTEACRLO_RUNS)
-            self.player_data.equity_to_river_2plr = self.get_equity(set(self.current_player.cards), set(self.table_cards),
-                                                                   sum(self.player_cycle.alive), MONTEACRLO_RUNS)
-            self.player_data.equity_to_river_3plr = self.get_equity(set(self.current_player.cards), set(self.table_cards),
-                                                                   sum(self.player_cycle.alive), MONTEACRLO_RUNS)
+            self.player_data.equity_to_river_2plr = self.get_equity(set(self.current_player.cards),
+                                                                    set(self.table_cards),
+                                                                    sum(self.player_cycle.alive), MONTEACRLO_RUNS)
+            self.player_data.equity_to_river_3plr = self.get_equity(set(self.current_player.cards),
+                                                                    set(self.table_cards),
+                                                                    sum(self.player_cycle.alive), MONTEACRLO_RUNS)
         else:
             self.current_player.equity_alive = np.nan
             self.player_data.equity_to_river_2plr = np.nan
@@ -492,6 +495,10 @@ class HoldemTable(Env):
         for player in self.players:
             player.last_action_in_stage = ''
         self.player_cycle.new_street_reset()
+
+        # advance headsup players by 1 step after preflop
+        if self.stage != Stage.PREFLOP and self.num_of_players == 2:
+            self.player_cycle.idx += 1
 
         if self.stage == Stage.PREFLOP:
             log.info("")

@@ -2,8 +2,8 @@
 import pytest
 
 from gym_env.cycle import PlayerCycle
-from gym_env.env import HoldemTable
 from gym_env.enums import Action, Stage
+from gym_env.env import HoldemTable
 
 
 def _create_env(n_players,
@@ -178,12 +178,12 @@ def test_base_actions_6_players_check_legal_moves_and_stages():
     env.step(Action.CALL)  # seat 5
     env.step(Action.CALL)  # seat 0 dealer
     assert env.stage == Stage.FLOP
+    assert env.current_player.seat == 1
     env.step(Action.CALL)  # seat 1 small blind
     assert env.stage == Stage.FLOP
     assert env.current_player.seat == 1
-    env.step(Action.RAISE_HALF_POT) # seat 2 big blind
+    env.step(Action.RAISE_HALF_POT)  # seat 2 big blind
     env.step(Action.FOLD)
-
 
 
 def test_cycle_mechanism1():
@@ -313,8 +313,64 @@ def test_preflop_call_after_max_raises():
     env.step(Action.CALL)
 
 
+@pytest.mark.skip(reason="raise 3bb is currently not handled correctly")
+def test_preflop_call_after_max_3bb_raises():
+    """Test that the preflop round ends when there is
+       a call after a raise
+    """
+    env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=2)
+    # sb
+    # bb
+    env.step(Action.CALL)  # sb
+    env.step(Action.RAISE_3BB)  # bb raises
+    env.step(Action.RAISE_3BB)  # sb raises
+    assert env.stage == Stage.PREFLOP
+    env.step(Action.RAISE_3BB)  # bb raises
+    assert env.stage == Stage.PREFLOP
+    env.step(Action.RAISE_3BB)  # sb raises
+    assert env.stage == Stage.PREFLOP
+    # Now we should still be in preflop, but raises are no longer legal actions
+    # Only a Call or Fold would end the round
+    assert env.legal_moves == [Action.CALL, Action.FOLD]
+
+    env.step(Action.CALL)
+    assert env.stage == Stage.FLOP
+
+
 def test_one_max_raise_per_player():
     """Test the possibility to make one max raise per player
     """
     env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=1)
     assert env.stage == Stage.PREFLOP
+
+
+def test_headsup_bb_starts_flop_bb_ends_preflop():
+    """Test that the big blind player should  play first in Flop even if
+    they ends preflop.
+    """
+    env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=2)
+    # sb (player seat is 1)
+    # bb (player seat is 0)
+    assert env.stage == Stage.PREFLOP and env.current_player.seat == 1
+    env.step(Action.CALL)  # sb
+    assert env.stage == Stage.PREFLOP and env.current_player.seat == 0
+    env.step(Action.CHECK)  # bb raises
+    assert env.stage == Stage.FLOP
+    assert env.current_player.seat == 0  # The bb should play first in FLOP
+
+
+def test_headsup_bb_starts_flop_sb_ends_preflop():
+    """Test that the big blind player should  play first in Flop after small
+    blind ends preflop.
+    """
+    env = _create_env(2, initial_stacks=100000, max_raises_per_player_round=2)
+    # sb (player seat is 1)
+    # bb (player seat is 0)
+    assert env.stage == Stage.PREFLOP and env.current_player.seat == 1
+    env.step(Action.CALL)  # sb
+    assert env.stage == Stage.PREFLOP and env.current_player.seat == 0
+    env.step(Action.RAISE_3BB)  # bb raises
+    assert env.stage == Stage.PREFLOP and env.current_player.seat == 1
+    env.step(Action.CALL)  # sb calls
+    assert env.stage == Stage.FLOP
+    assert env.current_player.seat == 0  # The bb should play first in FLOP
