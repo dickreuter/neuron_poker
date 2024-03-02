@@ -9,12 +9,12 @@ class Action(Enum):
     CHECK = 1
     CALL = 2
     RAISE_3BB = 3
-    RAISE_HALF_POT = 3
-    RAISE_POT = 4
-    RAISE_2POT = 5
-    ALL_IN = 6
-    SMALL_BLIND = 7
-    BIG_BLIND = 8
+    RAISE_HALF_POT = 4
+    RAISE_POT = 5
+    RAISE_2POT = 6
+    ALL_IN = 7
+    SMALL_BLIND = 8
+    BIG_BLIND = 9
 
 
 class Stage(Enum):
