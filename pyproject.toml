@@ -18,7 +18,11 @@ docopt = "^0.6.2"
 pydocstyle = "^6.3.0"
 matplotlib = "^3.8.2"
 mpld3 = "^0.5.10"
+tensorflow = { version = "<=2.15", optional = true }
+keras-rl = { version = "*", optional = true }
 
+[tool.poetry.extras]
+rl = [ "tensorflow", "keras-rl"]
 
 [build-system]
 requires = ["poetry-core"]

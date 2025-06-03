@@ -20,7 +20,8 @@ Run:
 - To manually control the players:``poetry run python main.py selfplay keypress --render``
 - Example of genetic algorithm with self improvement: ``poetry run python main.py selfplay equity_improvement --improvement_rounds=20 --episodes=10``
 - In order to use the C++ version of the equity calculator, you will also need to install Visual Studio 2019 (or GCC over Cygwin may work as well). To use it, use the -c option when running main.py.
-- For more advanced users: ``poetry run python main.py selfplay dqn_train -c`` will start training the deep Q agent with C++ Monte Carlo for faster calculation
+- For more advanced users: ``poetry run python main.py selfplay dqn_train -c`` will start training the deep Q agent with C++ Monte Carlo for faster calculation.
+  This requires tensorflow: ``poetry install --no-root --extras rl``
 
 .. figure:: doc/table.gif
    :alt:
