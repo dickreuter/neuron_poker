@@ -79,7 +79,6 @@ tests
 -  ``test_montecarlo.py``: tests for the hands evaluator and python
    based equity calculator.
 -  ``test_montecarlo_numpy.py``: tests for the numpy montecarlo
--  ``test_pylint.py``: pylint and pydoc tests to ensure pep8 standards and static code analysis
 
 
 Roadmap
