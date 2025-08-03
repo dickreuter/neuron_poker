@@ -338,7 +338,6 @@ dependencies = [
     { name = "pybind11" },
     { name = "pydocstyle" },
     { name = "pyglet" },
-    { name = "pylint" },
     { name = "setuptools" },
 ]
 
@@ -360,7 +359,6 @@ requires-dist = [
     { name = "pybind11", specifier = ">=2.11.1,<3" },
     { name = "pydocstyle", specifier = ">=6.3.0,<7" },
     { name = "pyglet", specifier = "==1.5.15" },
-    { name = "pylint", specifier = ">=3.0.3,<4" },
     { name = "setuptools", specifier = ">=80.9.0" },
 ]
 
