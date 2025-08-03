@@ -43,6 +43,7 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "pylint>=3.1.0",
     "pytest>=8.1.1",
     "pytest-xdist>=3.8.0",
 ]
