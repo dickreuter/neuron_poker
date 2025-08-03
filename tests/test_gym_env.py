@@ -177,11 +177,12 @@ def test_base_actions_6_players_check_legal_moves_and_stages():
     env.step(Action.CALL)  # seat 4
     env.step(Action.CALL)  # seat 5
     env.step(Action.CALL)  # seat 0 dealer
-    assert env.stage == Stage.FLOP
-    assert env.current_player.seat == 1
     env.step(Action.CALL)  # seat 1 small blind
     assert env.stage == Stage.FLOP
     assert env.current_player.seat == 1
+    env.step(Action.CHECK)  # seat 1 small blind
+    assert env.stage == Stage.FLOP
+    assert env.current_player.seat == 2
     env.step(Action.RAISE_HALF_POT)  # seat 2 big blind
     env.step(Action.FOLD)
 

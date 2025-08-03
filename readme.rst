@@ -19,7 +19,7 @@ Run:
 - Example of genetic algorithm with self improvement: ``uv run poker-equity-improvement``
 - In order to use the C++ version of the equity calculator, you will also need to install Visual Studio 2019 (or GCC over Cygwin may work as well). To use it, use the -c option when running main.py.
 - For more advanced users: ``uv run poker-dqn-train-cpp`` will start training the deep Q agent with C++ Monte Carlo for faster calculation
-- Run all tests: ``uv run pytest``
+- Run all tests: ``uv run pytest`` (use -n to run tests in parallel)
 
 .. figure:: doc/table.gif
    :alt:
