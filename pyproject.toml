@@ -16,7 +16,7 @@ dependencies = [
     "matplotlib>=3.8.2,<4",
     "mpld3>=0.5.10,<0.6",
     "setuptools>=80.9.0",
-    "gymnasium>=0.29.0",
+    "gym>=0.26.2",
 ]
 
 [project.scripts]
