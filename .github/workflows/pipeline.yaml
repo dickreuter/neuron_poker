@@ -1,8 +1,8 @@
-name: Python Poetry Test Workflow
+name: Python uv Test Workflow
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   test:
@@ -16,18 +16,19 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Install Poetry
+      - name: Install uv
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
         run: |
-          poetry install
+          uv sync
 
       - name: Run pytest tests
         run: |
-          poetry run pytest
+          uv run pytest
 
       - name: Run pylint
         run: |
-          poetry run pylint **/*.py
+          uv run pylint **/*.py
