@@ -4,8 +4,8 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from gym import Env
-from gym.spaces import Discrete
+from gymnasium import Env
+from gymnasium.spaces import Discrete, Box
 
 from gym_env.cycle import PlayerCycle
 from gym_env.enums import Action, Stage
@@ -135,12 +135,21 @@ class HoldemTable(Env):
         self.legal_moves = None
         self.illegal_move_reward = -1
         self.action_space = Discrete(len(Action) - 2)
+        # Initialize with a placeholder observation space - will be updated after first observation
+        self.observation_space = Box(
+            low=-np.inf, high=np.inf, shape=(1000,), dtype=np.float32
+        )
         self.first_action_for_hand = None
 
         self.raise_illegal_moves = raise_illegal_moves
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
         """Reset after game over."""
+        super().reset(seed=seed)
+
+        if seed is not None:
+            np.random.seed(seed)
+
         self.observation = None
         self.reward = None
         self.info = None
@@ -166,7 +175,7 @@ class HoldemTable(Env):
         if self._agent_is_autoplay() and not self.done:
             self.step('initial_player_autoplay')  # kick off the first action after bb by an autoplay agent
 
-        return self.array_everything
+        return self.array_everything, self.info
 
     def step(self, action):  # pylint: disable=arguments-differ
         """
@@ -206,8 +215,10 @@ class HoldemTable(Env):
                     self.first_action_for_hand[self.acting_agent] = False
                     self._calculate_reward(action)
 
-            log.debug(f"Previous action reward for seat {self.acting_agent}: {self.reward}")
-        return self.array_everything, self.reward, self.done, self.info
+            log.debug(
+                f"Previous action reward for seat {self.acting_agent}: {self.reward}"
+            )
+        return self.array_everything, self.reward, self.done, False, self.info
 
     def _execute_step(self, action):
         self._process_decision(action)
@@ -288,7 +299,14 @@ class HoldemTable(Env):
                      'stage_data': [stage.__dict__ for stage in self.stage_data],
                      'legal_moves': self.legal_moves}
 
-        self.observation_space = self.array_everything.shape
+        # Update observation space properly as a Box space after first observation
+        if hasattr(self, "observation_space") and self.array_everything is not None:
+            expected_shape = self.array_everything.shape
+            if self.observation_space.shape != expected_shape:
+                # Update observation space with correct shape
+                self.observation_space = Box(
+                    low=-np.inf, high=np.inf, shape=expected_shape, dtype=np.float32
+                )
 
         if self.render_switch:
             self.render()
@@ -367,8 +385,6 @@ class HoldemTable(Env):
 
             elif action == Action.SMALL_BLIND:
                 contribution = np.minimum(self.small_blind, self.current_player.stack)
-
-
             elif action == Action.BIG_BLIND:
                 contribution = np.minimum(self.big_blind, self.current_player.stack)
                 self.player_cycle.mark_bb()
@@ -680,6 +696,7 @@ class HoldemTable(Env):
         """Render the current state"""
         if mode != "human":
             return
+
         screen_width = 600
         screen_height = 400
         table_radius = 200

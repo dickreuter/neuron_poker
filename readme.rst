@@ -1,5 +1,5 @@
-Neuron Poker: OpenAi gym environment for texas holdem poker
-===========================================================
+Neuron Poker: OpenAi Gymnasium environment for texas holdem poker
+==================================================================
 
 This is an environment for training neural networks to play texas
 holdem. Please try to model your own players and create a pull request
@@ -34,13 +34,15 @@ At the end of an episode, the performance of the players can be observed via the
 Packages and modules:
 ~~~~~~~~~~~~~~~~~~~~~
 
-main.py: entry point and command line interpreter. Runs agents with the gym. The docstring at the top of the file describes the command line options.
+main.py: entry point and command line interpreter. Runs agents with Gymnasium. The docstring at the top of the file describes the command line options.
 They are interpreted by docopt.
 
 gym\_env
 ~~~~~~~~
 
--  ``env.py``: Texas Hold’em unlimited openai gym environment &
+~~
+
+-  ``env.py``: Texas Hold'em unlimited OpenAI Gymnasium environment &
    ``rendering.py``: rendering graphics while playing
 
 agents
@@ -127,10 +129,10 @@ line, simply add another line in the docstring at the top of main.py.
         """Create an environment with 6 random players"""
         env_name = 'neuron_poker-v0'
         stack = 500
-        self.env = gym.make(env_name, num_of_players=6, initial_stacks=stack)
+        self.env = gymnasium.make(env_name, num_of_players=6, initial_stacks=stack)
         for _ in range(num_of_plrs):
             player = RandomPlayer(500)
-            self.env.add_player(player)
+            self.env.unwrapped.add_player(player)
 
         self.env.reset()
 
@@ -138,7 +140,7 @@ As you can see, as a first step, the environment needs to be created. As a secon
 added to the table. As a third step the game is kicked off with a reset. Agents with autoplay set to True will automatically
 play, by having the action method called of their class. Alternatively you can use the PlayerShell class
 and the environment will require you call call the step function manually and loop over it. This may be helpful
-when using other packages which are designed to interface with the gym, such as keras-rl.
+when using other packages which are designed to interface with Gymnasium, such as keras-rl.
 
 Adding a new model / agent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
