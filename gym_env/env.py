@@ -678,6 +678,8 @@ class HoldemTable(Env):
 
     def render(self, mode='human'):
         """Render the current state"""
+        if mode != "human":
+            return
         screen_width = 600
         screen_height = 400
         table_radius = 200

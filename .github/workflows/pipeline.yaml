@@ -3,6 +3,7 @@ name: Python uv Test Workflow
 on:
   push:
     branches: [master]
+  pull_request:
 
 jobs:
   test:
