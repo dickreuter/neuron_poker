@@ -1,25 +1,48 @@
-[tool.poetry]
+[project]
 name = "neuron-poker"
 version = "0.1.0"
 description = ""
-authors = ["Nicolas Dickreuter <dickreuter@gmail.com>"]
+authors = [{ name = "Nicolas Dickreuter", email = "dickreuter@gmail.com" }]
+requires-python = "~=3.11"
 readme = "readme.rst"
+dependencies = [
+    "pandas>=2.2.0,<3",
+    "pylint>=3.0.3,<4",
+    "pyglet==1.5.15",
+    "pybind11>=2.11.1,<3",
+    "cppimport>=22.8.2,<23",
+    "docopt>=0.6.2,<0.7",
+    "pydocstyle>=6.3.0,<7",
+    "matplotlib>=3.8.2,<4",
+    "mpld3>=0.5.10,<0.6",
+    "setuptools>=80.9.0",
+    "gymnasium>=0.29.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-pandas = "^2.2.0"
-pytest = "^8.0.0"
-pylint = "^3.0.3"
-gym = "0.23.0"
-pyglet = "1.5.15"
-pybind11 = "^2.11.1"
-cppimport = "^22.8.2"
-docopt = "^0.6.2"
-pydocstyle = "^6.3.0"
-matplotlib = "^3.8.2"
-mpld3 = "^0.5.10"
+[project.scripts]
+# Main game modes
+poker-random = "scripts:main_random"
+poker-keypress = "scripts:main_keypress" 
+poker-equity = "scripts:main_equity"
+poker-equity-improvement = "scripts:main_equity_improvement"
+poker-dqn-train = "scripts:main_dqn_train"
+poker-dqn-play = "scripts:main_dqn_play"
 
+# Convenience scripts with common options
+poker-random-render = "scripts:main_random_render"
+poker-keypress-render = "scripts:main_keypress_render"
+poker-equity-render = "scripts:main_equity_render"
+poker-dqn-train-cpp = "scripts:main_dqn_train_cpp"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.1.1",
+    "pytest-xdist>=3.8.0",
+]

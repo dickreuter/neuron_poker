@@ -11,16 +11,15 @@ Usage:
 Run:
 
 - Install Python 3.11, I would also recommend to install PyCharm.
-- Install Poetry with ``curl -sSL https://install.python-poetry.org | python3 -``
-- Create a virtual environment with ``poetry env use python3.11``
-- Activate it with ``poetry shell``
-- Install all required packages with ``poetry install --no-root``
+- Install uv with ``curl -LsSf https://astral.sh/uv/install.sh | sh``
+- Create a virtual environment and install dependencies with ``uv sync``
 - Run 6 random players playing against each other:
-  ``poetry run python main.py selfplay random --render`` or
-- To manually control the players:``poetry run python main.py selfplay keypress --render``
-- Example of genetic algorithm with self improvement: ``poetry run python main.py selfplay equity_improvement --improvement_rounds=20 --episodes=10``
+  ``uv run poker-random-render`` or
+- To manually control the players: ``uv run poker-keypress-render``
+- Example of genetic algorithm with self improvement: ``uv run poker-equity-improvement``
 - In order to use the C++ version of the equity calculator, you will also need to install Visual Studio 2019 (or GCC over Cygwin may work as well). To use it, use the -c option when running main.py.
-- For more advanced users: ``poetry run python main.py selfplay dqn_train -c`` will start training the deep Q agent with C++ Monte Carlo for faster calculation
+- For more advanced users: ``uv run poker-dqn-train-cpp`` will start training the deep Q agent with C++ Monte Carlo for faster calculation
+- Run all tests: ``uv run pytest``
 
 .. figure:: doc/table.gif
    :alt:
@@ -212,7 +211,7 @@ be added and evaluated.
 
 To contribute do the following:
 
-- Get Pycharm and build the virtual python environment. Use can do: ``pip install -r requirements.txt``
+- Get Pycharm and build the virtual python environment. Use can do: ``uv sync``
 - If you want to use the 500x faster c++ based equity calculator, also install visual studio, but this is not necessary
 - Clone your fork to your local machine. You can do this directly from pycharm: VCS --> check out from version control --> git
 - Add as remote the original repository where you created the fork from and call it upstream (the connection to your fork should be called origin). This can be done with vcs --> git --> remotes
