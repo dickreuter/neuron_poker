@@ -709,7 +709,7 @@ class HoldemTable(Env):
                            thickness=0)
 
         for i in range(len(self.players)):
-            degrees = i * (360 / len(self.players))
+            degrees =(360 / len(self.players))
             radian = (degrees * (np.pi / 180))
             x = (face_radius + table_radius) * np.cos(radian) + screen_width / 2
             y = (face_radius + table_radius) * np.sin(radian) + screen_height / 2
